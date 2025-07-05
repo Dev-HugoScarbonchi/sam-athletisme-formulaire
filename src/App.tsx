@@ -389,190 +389,202 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50 py-8 px-4">
       <div className="w-full max-w-[80rem] mx-auto">
-        <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-blue-200">
           {/* Header with Logo */}
-          <div className="bg-gradient-to-r from-blue-600 via-blue-800 to-red-600 px-8 py-8 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-red-500 px-8 py-10 relative overflow-hidden">
             {/* Background pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
-              <div className="absolute bottom-0 right-0 w-24 h-24 bg-white rounded-full translate-x-12 translate-y-12"></div>
-              <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-red-400 rounded-full -translate-x-8 -translate-y-8"></div>
+            <div className="absolute inset-0 opacity-15">
+              <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-20 -translate-y-20 animate-pulse"></div>
+              <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16 translate-y-16 animate-pulse"></div>
+              <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-red-300 rounded-full -translate-x-10 -translate-y-10 animate-pulse"></div>
+              <div className="absolute top-1/4 right-1/4 w-12 h-12 bg-blue-300 rounded-full animate-pulse"></div>
             </div>
             
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center gap-6">
-                <div className="bg-white p-4 rounded-xl shadow-2xl border border-gray-300">
-                  <div className="h-16 w-16 bg-gradient-to-br from-blue-600 to-red-600 rounded-lg flex items-center justify-center shadow-inner">
-                    <span className="text-white font-bold text-xl tracking-wider">SAM</span>
+                <div className="bg-white p-5 rounded-2xl shadow-2xl border-2 border-white/50 transform hover:scale-105 transition-transform duration-300">
+                  <div className="h-20 w-20 bg-gradient-to-br from-blue-600 to-red-600 rounded-xl flex items-center justify-center shadow-inner">
+                    <span className="text-white font-bold text-2xl tracking-wider">SAM</span>
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white flex items-center gap-3 drop-shadow-lg">
-                    <Shield className="w-8 h-8" />
+                  <h1 className="text-4xl font-bold text-white flex items-center gap-4 drop-shadow-lg">
+                    <Shield className="w-10 h-10 animate-pulse" />
                     Formulaire de Remboursement de Frais
                   </h1>
-                  <p className="text-blue-100 mt-2 text-lg font-medium">SAM Athlétisme Mérignacais</p>
-                  <p className="text-blue-200 text-sm mt-1">Veuillez remplir tous les champs obligatoires marqués d'un astérisque (*)</p>
+                  <p className="text-blue-100 mt-3 text-xl font-medium">SAM Athlétisme Mérignacais</p>
+                  <p className="text-blue-200 text-base mt-2 bg-white/10 rounded-lg px-4 py-2 inline-block">
+                    Veuillez remplir tous les champs obligatoires marqués d'un astérisque (*)
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-8 bg-gray-800">
+          <form onSubmit={handleSubmit} className="p-10 space-y-10 bg-white">
             {/* Personal Information */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-semibold text-blue-400 border-b-2 border-blue-500 pb-2 flex items-center gap-2">
-                <FileText className="w-6 h-6" />
+              <h2 className="text-3xl font-bold text-blue-700 border-b-4 border-blue-300 pb-3 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-4 -m-4 mb-6">
+                <FileText className="w-8 h-8 text-blue-600" />
                 Informations Personnelles
               </h2>
               
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Lieu *
                   </label>
                   <input
                     type="text"
                     value={formData.place}
                     onChange={(e) => handleInputChange('place', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                       errors.place ? 'border-red-500' : 'border-gray-600'
-                    } hover:border-blue-400`}
+                    } hover:border-blue-400 transform hover:scale-[1.02]`}
                     placeholder="Saisissez le lieu"
                   />
-                  {errors.place && <p className="mt-1 text-sm text-red-600">{errors.place}</p>}
+                  {errors.place && <p className="mt-2 text-sm text-red-600 font-medium">{errors.place}</p>}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Date *
                   </label>
                   <input
                     type="date"
                     value={formData.date}
                     onChange={(e) => handleInputChange('date', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                       errors.date ? 'border-red-500' : 'border-gray-600'
-                    } hover:border-blue-400`}
+                    } hover:border-blue-400 transform hover:scale-[1.02]`}
                   />
-                  {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
+                  {errors.date && <p className="mt-2 text-sm text-red-600 font-medium">{errors.date}</p>}
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Prénom *
                   </label>
                   <input
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                       errors.firstName ? 'border-red-500' : 'border-gray-600'
-                    } hover:border-blue-400`}
+                    } hover:border-blue-400 transform hover:scale-[1.02]`}
                     placeholder="Saisissez votre prénom"
                   />
-                  {errors.firstName && <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>}
+                  {errors.firstName && <p className="mt-2 text-sm text-red-600 font-medium">{errors.firstName}</p>}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Nom *
                   </label>
                   <input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                       errors.lastName ? 'border-red-500' : 'border-gray-600'
-                    } hover:border-blue-400`}
+                    } hover:border-blue-400 transform hover:scale-[1.02]`}
                     placeholder="Saisissez votre nom"
                   />
-                  {errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>}
+                  {errors.lastName && <p className="mt-2 text-sm text-red-600 font-medium">{errors.lastName}</p>}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                   Rôle/Fonction *
                 </label>
                 <input
                   type="text"
                   value={formData.role}
                   onChange={(e) => handleInputChange('role', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                  className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                     errors.role ? 'border-red-500' : 'border-gray-600'
-                  } hover:border-blue-400`}
+                  } hover:border-blue-400 transform hover:scale-[1.02]`}
                   placeholder="Saisissez votre rôle ou fonction"
                 />
-                {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
+                {errors.role && <p className="mt-2 text-sm text-red-600 font-medium">{errors.role}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                   Objet de la Demande *
                 </label>
                 <input
                   type="text"
                   value={formData.subject}
                   onChange={(e) => handleInputChange('subject', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                  className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                     errors.subject ? 'border-red-500' : 'border-gray-600'
-                  } hover:border-blue-400`}
+                  } hover:border-blue-400 transform hover:scale-[1.02]`}
                   placeholder="Saisissez l'objet de votre demande"
                 />
-                {errors.subject && <p className="mt-1 text-sm text-red-600">{errors.subject}</p>}
+                {errors.subject && <p className="mt-2 text-sm text-red-600 font-medium">{errors.subject}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                   Motivation *
                 </label>
                 <textarea
                   value={formData.motivation}
                   onChange={(e) => handleInputChange('motivation', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                  className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                     errors.motivation ? 'border-red-500' : 'border-gray-600'
-                  } hover:border-blue-400`}
+                  } hover:border-blue-400 transform hover:scale-[1.02]`}
                   rows={4}
                   placeholder="Expliquez la motivation de cette demande de remboursement"
                 />
-                {errors.motivation && <p className="mt-1 text-sm text-red-600">{errors.motivation}</p>}
+                {errors.motivation && <p className="mt-2 text-sm text-red-600 font-medium">{errors.motivation}</p>}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Mode de Paiement *
                   </label>
                   <input
                     type="text"
                     value={formData.paymentMethod}
                     onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                       errors.paymentMethod ? 'border-red-500' : 'border-gray-600'
-                    } hover:border-blue-400`}
+                    } hover:border-blue-400 transform hover:scale-[1.02]`}
                     placeholder="Virement bancaire, chèque, etc."
                   />
-                  {errors.paymentMethod && <p className="mt-1 text-sm text-red-600">{errors.paymentMethod}</p>}
+                  {errors.paymentMethod && <p className="mt-2 text-sm text-red-600 font-medium">{errors.paymentMethod}</p>}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Date de la Demande *
                   </label>
                   <input
                     type="date"
                     value={formData.requestDate}
                     onChange={(e) => handleInputChange('requestDate', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-800 text-lg shadow-sm hover:shadow-md ${
                       errors.requestDate ? 'border-red-500' : 'border-gray-600'
-                    } hover:border-blue-400`}
+                    } hover:border-blue-400 transform hover:scale-[1.02]`}
                   />
-                  {errors.requestDate && <p className="mt-1 text-sm text-red-600">{errors.requestDate}</p>}
+                  {errors.requestDate && <p className="mt-2 text-sm text-red-600 font-medium">{errors.requestDate}</p>}
                 </div>
               </div>
             </section>

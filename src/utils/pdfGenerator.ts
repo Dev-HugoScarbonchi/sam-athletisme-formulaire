@@ -43,36 +43,40 @@ export const generateExpenseReportPDF = async (
     return y + (lines.length * fontSize * 0.35);
   };
 
-  // Header with logo placeholder and title
-  pdf.setFillColor(37, 99, 235); // Blue color
-  pdf.rect(0, 0, pageWidth, 40, 'F');
+  // Clean header with simple design
+  // Logo placeholder (light grey rectangle)
+  pdf.setFillColor(240, 240, 240); // Light grey
+  pdf.rect(margin, yPosition, 24, 24, 'F');
+  pdf.setDrawColor(200, 200, 200); // Grey border
+  pdf.rect(margin, yPosition, 24, 24, 'S');
   
-  // Logo placeholder (white rectangle)
-  pdf.setFillColor(255, 255, 255);
-  pdf.rect(margin, 8, 24, 24, 'F');
-  pdf.setTextColor(37, 99, 235);
+  pdf.setTextColor(0, 0, 0); // Black text
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('SAM', margin + 12, 22, { align: 'center' });
+  pdf.text('SAM', margin + 12, yPosition + 15, { align: 'center' });
 
   // Title
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(18);
+  pdf.setFontSize(20);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('FICHE DE REMBOURSEMENT DE FRAIS', margin + 35, 20);
-  pdf.setFontSize(12);
+  pdf.text('FICHE DE REMBOURSEMENT DE FRAIS', margin + 35, yPosition + 12);
+  pdf.setFontSize(14);
   pdf.setFont('helvetica', 'normal');
-  pdf.text('SAM Athlétisme Mérignacais', margin + 35, 28);
+  pdf.text('SAM Athlétisme Mérignacais', margin + 35, yPosition + 22);
+  
+  // Simple line separator
+  pdf.setDrawColor(200, 200, 200);
+  pdf.line(margin, yPosition + 30, pageWidth - margin, yPosition + 30);
+  yPosition = yPosition + 40;
 
-  yPosition = 50;
-
-  // Reset text color to black
+  // Ensure text color is black
   pdf.setTextColor(0, 0, 0);
 
   // Personal Information Section
   pdf.setFontSize(14);
   pdf.setFont('helvetica', 'bold');
   pdf.text('INFORMATIONS PERSONNELLES', margin, yPosition);
+  pdf.setDrawColor(200, 200, 200);
+  pdf.line(margin, yPosition + 2, margin + 80, yPosition + 2);
   yPosition += 10;
 
   pdf.setFontSize(10);
@@ -100,6 +104,8 @@ export const generateExpenseReportPDF = async (
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
   pdf.text('MOTIVATION', margin, yPosition);
+  pdf.setDrawColor(200, 200, 200);
+  pdf.line(margin, yPosition + 2, margin + 40, yPosition + 2);
   yPosition += 8;
 
   pdf.setFontSize(10);
@@ -111,11 +117,15 @@ export const generateExpenseReportPDF = async (
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
   pdf.text('DÉTAIL DES DÉPENSES', margin, yPosition);
+  pdf.setDrawColor(200, 200, 200);
+  pdf.line(margin, yPosition + 2, margin + 70, yPosition + 2);
   yPosition += 10;
 
   // Table header
-  pdf.setFillColor(240, 240, 240);
+  pdf.setFillColor(250, 250, 250); // Very light grey
   pdf.rect(margin, yPosition - 5, pageWidth - 2 * margin, 8, 'F');
+  pdf.setDrawColor(200, 200, 200);
+  pdf.rect(margin, yPosition - 5, pageWidth - 2 * margin, 8, 'S');
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Nature de la dépense', margin + 2, yPosition);
@@ -132,9 +142,13 @@ export const generateExpenseReportPDF = async (
       
       // Alternate row colors
       if (index % 2 === 0) {
-        pdf.setFillColor(250, 250, 250);
+        pdf.setFillColor(248, 248, 248); // Very light grey
         pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, 6, 'F');
       }
+      
+      // Add subtle border
+      pdf.setDrawColor(230, 230, 230);
+      pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, 6, 'S');
       
       pdf.text(expense.nature, margin + 2, yPosition);
       pdf.text(amount.toFixed(2), pageWidth - margin - 30, yPosition);
@@ -145,14 +159,16 @@ export const generateExpenseReportPDF = async (
 
   // Total expenses
   pdf.setFont('helvetica', 'bold');
-  pdf.setFillColor(37, 99, 235);
+  pdf.setFillColor(220, 220, 220); // Light grey
   pdf.rect(margin, yPosition, pageWidth - 2 * margin, 8, 'F');
-  pdf.setTextColor(255, 255, 255);
+  pdf.setDrawColor(180, 180, 180);
+  pdf.rect(margin, yPosition, pageWidth - 2 * margin, 8, 'S');
+  pdf.setTextColor(0, 0, 0); // Black text
   pdf.text('TOTAL DÉPENSES', margin + 2, yPosition + 5);
   pdf.text(`${totalAmount.toFixed(2)} €`, pageWidth - margin - 30, yPosition + 5);
   yPosition += 15;
 
-  // Reset text color
+  // Ensure text color is black
   pdf.setTextColor(0, 0, 0);
 
   // Kilometric reimbursement section
@@ -160,6 +176,8 @@ export const generateExpenseReportPDF = async (
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
     pdf.text('REMBOURSEMENT KILOMÉTRIQUE', margin, yPosition);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(margin, yPosition + 2, margin + 90, yPosition + 2);
     yPosition += 8;
 
     pdf.setFontSize(10);
@@ -172,14 +190,16 @@ export const generateExpenseReportPDF = async (
     yPosition += 5;
 
     pdf.setFont('helvetica', 'bold');
-    pdf.setFillColor(37, 99, 235);
+    pdf.setFillColor(220, 220, 220); // Light grey
     pdf.rect(margin, yPosition, pageWidth - 2 * margin, 8, 'F');
-    pdf.setTextColor(255, 255, 255);
+    pdf.setDrawColor(180, 180, 180);
+    pdf.rect(margin, yPosition, pageWidth - 2 * margin, 8, 'S');
+    pdf.setTextColor(0, 0, 0); // Black text
     pdf.text('TOTAL KILOMÉTRIQUE', margin + 2, yPosition + 5);
     pdf.text(`${kilometricReimbursement.toFixed(2)} €`, pageWidth - margin - 30, yPosition + 5);
     yPosition += 15;
 
-    // Reset text color
+    // Ensure text color is black
     pdf.setTextColor(0, 0, 0);
   }
 
@@ -187,14 +207,16 @@ export const generateExpenseReportPDF = async (
   const grandTotal = totalAmount + kilometricReimbursement;
   pdf.setFontSize(14);
   pdf.setFont('helvetica', 'bold');
-  pdf.setFillColor(220, 38, 127); // Red color
+  pdf.setFillColor(200, 200, 200); // Medium grey
   pdf.rect(margin, yPosition, pageWidth - 2 * margin, 12, 'F');
-  pdf.setTextColor(255, 255, 255);
+  pdf.setDrawColor(150, 150, 150);
+  pdf.rect(margin, yPosition, pageWidth - 2 * margin, 12, 'S');
+  pdf.setTextColor(0, 0, 0); // Black text
   pdf.text('MONTANT TOTAL DE LA DEMANDE', margin + 2, yPosition + 8);
   pdf.text(`${grandTotal.toFixed(2)} €`, pageWidth - margin - 40, yPosition + 8);
   yPosition += 20;
 
-  // Reset text color
+  // Ensure text color is black
   pdf.setTextColor(0, 0, 0);
 
   // Check if we need a new page for signatures
@@ -207,6 +229,8 @@ export const generateExpenseReportPDF = async (
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
   pdf.text('SIGNATURES', margin, yPosition);
+  pdf.setDrawColor(200, 200, 200);
+  pdf.line(margin, yPosition + 2, margin + 40, yPosition + 2);
   yPosition += 15;
 
   // Signature boxes
@@ -214,6 +238,7 @@ export const generateExpenseReportPDF = async (
   const signatureBoxHeight = 40;
 
   // Left signature box - Demandeur
+  pdf.setDrawColor(180, 180, 180);
   pdf.rect(margin, yPosition, signatureBoxWidth, signatureBoxHeight);
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'bold');
@@ -235,6 +260,7 @@ export const generateExpenseReportPDF = async (
 
   // Right signature box - Président
   const rightBoxX = margin + signatureBoxWidth + margin;
+  pdf.setDrawColor(180, 180, 180);
   pdf.rect(rightBoxX, yPosition, signatureBoxWidth, signatureBoxHeight);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Signature du président', rightBoxX + 5, yPosition - 3);
@@ -243,13 +269,13 @@ export const generateExpenseReportPDF = async (
 
   // Add president signature placeholder
   pdf.setFontSize(8);
-  pdf.setTextColor(128, 128, 128);
+  pdf.setTextColor(120, 120, 120); // Medium grey
   pdf.text('(Signature à apposer)', rightBoxX + 5, yPosition + 20);
 
   // Footer
   yPosition = pageHeight - 20;
   pdf.setFontSize(8);
-  pdf.setTextColor(128, 128, 128);
+  pdf.setTextColor(120, 120, 120); // Medium grey
   pdf.text(`Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`, margin, yPosition);
   pdf.text('SAM Athlétisme Mérignacais - Formulaire de remboursement de frais', pageWidth - margin, yPosition, { align: 'right' });
 
