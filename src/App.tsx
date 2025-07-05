@@ -727,20 +727,6 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                         </div>
                       </div>
                       
-                      {/* Delete button - separate row on mobile */}
-                      {formData.expenses.length > 1 && (
-                        <div className="flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => removeExpenseRow(expense.id)}
-                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      )}
-                      </div>
-                      
                       {/* Justificatifs pour cette dépense */}
                       <div className="border-t-2 border-gray-300 pt-4">
                         <label className="block text-sm font-medium text-gray-900 mb-2">
@@ -773,6 +759,19 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                           </div>
                         )}
                       </div>
+                      
+                      {/* Delete button - separate row on mobile */}
+                      {formData.expenses.length > 1 && (
+                        <div className="flex justify-end mt-4">
+                          <button
+                            type="button"
+                            onClick={() => removeExpenseRow(expense.id)}
+                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
