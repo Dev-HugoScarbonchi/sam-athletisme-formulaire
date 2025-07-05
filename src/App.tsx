@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, FileText, Car, CreditCard, Upload, CheckCircle, AlertCircle, Image, Shield } from 'lucide-react';
+import { Plus, Trash2, FileText, Car, CreditCard, Upload, CheckCircle, AlertCircle, Image, Shield, ExternalLink } from 'lucide-react';
 import { generateExpenseReportPDF } from './utils/pdfGenerator';
 
 interface ExpenseRow {
@@ -503,6 +503,32 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   </p>
                 </div>
               </div>
+              
+              {/* SAM Website Button */}
+              <div className="hidden sm:block">
+                <a
+                  href="https://www.sam-athletisme.fr/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-300 border border-white/30 hover:border-white/50 backdrop-blur-sm"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span className="text-sm font-medium">Site SAM</span>
+                </a>
+              </div>
+            </div>
+            
+            {/* Mobile SAM Website Button */}
+            <div className="sm:hidden mt-4 flex justify-center">
+              <a
+                href="https://www.sam-athletisme.fr/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-300 border border-white/30 hover:border-white/50 backdrop-blur-sm"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span className="text-sm font-medium">Visiter le site SAM</span>
+              </a>
             </div>
           </div>
 
@@ -1024,6 +1050,23 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
               </button>
             </div>
           </form>
+          
+          {/* Developer Signature */}
+          <div className="bg-gray-50 border-t border-gray-200 px-4 sm:px-10 py-4">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Propulsé et développé par{' '}
+                <a
+                  href="https://www.hugoscarbonchi.fr/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 font-medium underline decoration-blue-300 hover:decoration-blue-500 transition-colors"
+                >
+                  Hugo Scarbonchi
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
