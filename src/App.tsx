@@ -852,17 +852,17 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
               
               {/* Grand Total */}
               <div className="bg-gradient-to-r from-blue-600 to-red-600 rounded-xl p-6 text-white shadow-lg border border-blue-500">
-                <div className="flex justify-between items-center">
-                  <div>
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                  <div className="w-full lg:w-auto">
                     <h3 className="text-xl font-semibold mb-2">Montant Total de la Demande</h3>
                     <div className="space-y-1 text-blue-200">
                       <p>• Dépenses diverses: {totalAmount.toFixed(2)} €</p>
                       <p>• Remboursement kilométrique: {kilometricReimbursement.toFixed(2)} €</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="w-full lg:w-auto text-center lg:text-right">
                     <p className="text-sm text-blue-300">TOTAL GÉNÉRAL</p>
-                    <p className="text-4xl font-bold">{(totalAmount + kilometricReimbursement).toFixed(2)} €</p>
+                    <p className="text-3xl lg:text-4xl font-bold">{(totalAmount + kilometricReimbursement).toFixed(2)} €</p>
                   </div>
                 </div>
               </div>
