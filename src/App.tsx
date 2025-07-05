@@ -315,6 +315,62 @@ function App() {
       
       formDataToSend.append('fileNamesSummary', JSON.stringify(fileNamesSummary));
       
+      // Create formatted email content with file names
+      const emailContent = `
+DEMANDE DE REMBOURSEMENT DE FRAIS
+SAM Athlétisme Mérignacais
+
+INFORMATIONS PERSONNELLES:
+- Nom: ${formData.lastName}
+- Prénom: ${formData.firstName}
+- Rôle/Fonction: ${formData.role}
+- Lieu: ${formData.place}
+- Date: ${new Date(formData.date).toLocaleDateString('fr-FR')}
+- Objet de la demande: ${formData.subject}
+- Mode de paiement: ${formData.paymentMethod}
+- Date de la demande: ${new Date(formData.requestDate).toLocaleDateString('fr-FR')}
+
+MOTIVATION:
+${formData.motivation}
+
+DÉTAIL DES DÉPENSES:
+${formData.expenses.filter(expense => expense.nature.trim() && expense.amount.trim()).map(expense => {
+  const filesList = expense.attachments.length > 0 
+    ? ` - Fichiers: ${expense.attachments.map(file => file.name).join(', ')}`
+    : ' - Aucun fichier joint';
+  return `${expense.nature}: ${parseFloat(expense.amount).toFixed(2)} €${filesList}`;
+}).join('\n')}
+
+TOTAL DÉPENSES: ${totalAmount.toFixed(2)} €
+
+${parseFloat(formData.kilometers) > 0 ? `
+REMBOURSEMENT KILOMÉTRIQUE:
+- Nombre de kilomètres: ${formData.kilometers} km
+- Taux: 0,321 €/km
+- Véhicule de location: ${formData.rentalVehicle ? 'Oui' : 'Non'}
+- Montant kilométrique: ${kilometricReimbursement.toFixed(2)} €
+` : ''}
+MONTANT TOTAL DE LA DEMANDE: ${(totalAmount + kilometricReimbursement).toFixed(2)} €
+
+PIÈCES JUSTIFICATIVES SUPPLÉMENTAIRES:
+${Object.entries(attachments).map(([category, groups]) => {
+  const categoryNames = {
+    transport: 'Documents de Transport',
+    banking: 'Informations Bancaires', 
+    other: 'Documents Supplémentaires'
+  };
+  const allFiles = groups.flatMap(group => group.files.map(file => file.name));
+  return allFiles.length > 0 
+    ? `${categoryNames[category as keyof typeof categoryNames]}:\n${allFiles.map(file => `- ${file}`).join('\n')}`
+    : '';
+}).filter(section => section).join('\n\n')}
+
+---
+Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}
+      `.trim();
+      
+      formDataToSend.append('emailContent', emailContent);
+      
       // Add calculated fields
       formDataToSend.append('totalAmount', totalAmount.toString());
       formDataToSend.append('kilometricReimbursement', kilometricReimbursement.toString());
