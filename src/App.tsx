@@ -567,9 +567,13 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     type="date"
                     value={formData.date}
                     onChange={(e) => handleInputChange('date', e.target.value)}
-                    className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
+                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md appearance-none ${
                       errors.date ? 'border-red-500' : 'border-gray-400'
                     } hover:border-blue-400 transform hover:scale-[1.02]`}
+                    style={{ 
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'textfield'
+                    }}
                   />
                   {errors.date && <p className="mt-2 text-sm text-red-700 font-medium">{errors.date}</p>}
                 </div>
@@ -689,9 +693,13 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     type="date"
                     value={formData.requestDate}
                     onChange={(e) => handleInputChange('requestDate', e.target.value)}
-                    className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
+                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md appearance-none ${
                       errors.requestDate ? 'border-red-500' : 'border-gray-400'
                     } hover:border-blue-400 transform hover:scale-[1.02]`}
+                    style={{ 
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'textfield'
+                    }}
                   />
                   {errors.requestDate && <p className="mt-2 text-sm text-red-700 font-medium">{errors.requestDate}</p>}
                 </div>
