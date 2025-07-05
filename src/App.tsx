@@ -484,9 +484,11 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center gap-6">
                 <div className="bg-white p-5 rounded-2xl shadow-2xl border-2 border-white/50 transform hover:scale-105 transition-transform duration-300">
-                  <div className="h-20 w-20 bg-gradient-to-br from-blue-600 to-red-600 rounded-xl flex items-center justify-center shadow-inner">
-                    <span className="text-white font-bold text-2xl tracking-wider">SAM</span>
-                  </div>
+                  <img 
+                    src="/Logo SAM Athlétisme 2016-17.png" 
+                    alt="SAM Athlétisme Mérignacais" 
+                    className="h-20 w-20 object-contain rounded-xl shadow-inner"
+                  />
                 </div>
                 <div>
                   <h1 className="text-4xl font-bold text-white flex items-center gap-4 drop-shadow-lg">

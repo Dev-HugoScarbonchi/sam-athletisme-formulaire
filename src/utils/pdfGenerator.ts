@@ -44,16 +44,38 @@ export const generateExpenseReportPDF = async (
   };
 
   // Clean header with simple design
-  // Logo placeholder (light grey rectangle)
-  pdf.setFillColor(240, 240, 240); // Light grey
-  pdf.rect(margin, yPosition, 24, 24, 'F');
-  pdf.setDrawColor(200, 200, 200); // Grey border
-  pdf.rect(margin, yPosition, 24, 24, 'S');
-  
-  pdf.setTextColor(0, 0, 0); // Black text
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('SAM', margin + 12, yPosition + 15, { align: 'center' });
+  // Add SAM logo
+  try {
+    // Create a canvas to load and convert the logo
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    // Load logo synchronously for PDF generation
+    const logoDataUrl = await new Promise<string>((resolve, reject) => {
+      img.onload = () => {
+        canvas.width = 48;
+        canvas.height = 48;
+        ctx?.drawImage(img, 0, 0, 48, 48);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = reject;
+      img.src = '/Logo SAM Athlétisme 2016-17.png';
+    });
+    
+    pdf.addImage(logoDataUrl, 'PNG', margin, yPosition, 24, 24);
+  } catch (error) {
+    console.warn('Could not load logo for PDF, using fallback:', error);
+    // Fallback to simple rectangle with text
+    pdf.setFillColor(240, 240, 240);
+    pdf.rect(margin, yPosition, 24, 24, 'F');
+    pdf.setDrawColor(200, 200, 200);
+    pdf.rect(margin, yPosition, 24, 24, 'S');
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('SAM', margin + 12, yPosition + 15, { align: 'center' });
+  }
 
   // Title
   pdf.setFontSize(20);
