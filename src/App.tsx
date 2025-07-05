@@ -374,7 +374,7 @@ function App() {
       
       // Add email configuration
       // Envoyer vers le serveur PHP
-      const response = await fetch('https://scarbonk.fr/sam/backend/form-handler.php', {
+      const response = await fetch('https://api.scarbonk.fr/form-handler.php', {
         method: 'POST',
         body: formDataToSend
       });
