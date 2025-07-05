@@ -562,6 +562,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Date *
+                    <span className="md:hidden text-xs font-normal text-gray-600 ml-2">(cliquer sur le champ pour entrer la date)</span>
                   </label>
                   <input
                     type="date"
@@ -688,6 +689,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                     Date de la Demande *
+                    <span className="md:hidden text-xs font-normal text-gray-600 ml-2">(cliquer sur le champ pour entrer la date)</span>
                   </label>
                   <input
                     type="date"
