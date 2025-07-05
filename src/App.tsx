@@ -268,9 +268,15 @@ function App() {
       // Add form fields
       Object.entries(formData).forEach(([key, value]) => {
         if (key === 'expenses') {
-          formDataToSend.append(key, JSON.stringify(value));
+          // Include file names in the expenses data for email
+          const expensesWithFileNames = value.map(expense => ({
+            ...expense,
+            attachmentNames: expense.attachments.map(file => file.name)
+          }));
+          formDataToSend.append(key, JSON.stringify(expensesWithFileNames));
         } else if (key === 'signatureFile' && value instanceof File) {
-          formDataToSend.append('signatureFile', value);
+          // Don't send signature as attachment - it's embedded in PDF
+          // formDataToSend.append('signatureFile', value);
         } else if (key !== 'signatureFile') {
           formDataToSend.append(key, value.toString());
         }
@@ -291,6 +297,23 @@ function App() {
           formDataToSend.append(`expense_${expenseIndex}_${fileIndex}`, file);
         });
       });
+      
+      // Add file names summary for email
+      const fileNamesSummary = {
+        expenseFiles: formData.expenses.map((expense, index) => ({
+          expenseIndex: index,
+          nature: expense.nature,
+          amount: expense.amount,
+          files: expense.attachments.map(file => file.name)
+        })).filter(expense => expense.files.length > 0),
+        
+        attachmentFiles: Object.entries(attachments).map(([category, groups]) => ({
+          category,
+          files: groups.flatMap(group => group.files.map(file => file.name))
+        })).filter(cat => cat.files.length > 0)
+      };
+      
+      formDataToSend.append('fileNamesSummary', JSON.stringify(fileNamesSummary));
       
       // Add calculated fields
       formDataToSend.append('totalAmount', totalAmount.toString());

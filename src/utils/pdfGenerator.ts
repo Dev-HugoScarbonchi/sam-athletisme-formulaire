@@ -138,22 +138,36 @@ export const generateExpenseReportPDF = async (
   formData.expenses.forEach((expense, index) => {
     if (expense.nature.trim() && expense.amount.trim()) {
       const amount = parseFloat(expense.amount) || 0;
-      const attachmentCount = expense.attachments.length;
+      const attachmentNames = expense.attachments.map(file => file.name);
       
       // Alternate row colors
       if (index % 2 === 0) {
         pdf.setFillColor(248, 248, 248); // Very light grey
-        pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, 6, 'F');
+        const rowHeight = Math.max(6, attachmentNames.length * 3 + 3);
+        pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, rowHeight, 'F');
       }
       
       // Add subtle border
       pdf.setDrawColor(230, 230, 230);
-      pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, 6, 'S');
+      const rowHeight = Math.max(6, attachmentNames.length * 3 + 3);
+      pdf.rect(margin, yPosition - 3, pageWidth - 2 * margin, rowHeight, 'S');
       
       pdf.text(expense.nature, margin + 2, yPosition);
       pdf.text(amount.toFixed(2), pageWidth - margin - 30, yPosition);
-      pdf.text(`${attachmentCount} fichier(s)`, pageWidth - margin - 80, yPosition);
-      yPosition += 6;
+      
+      // Display file names instead of just count
+      if (attachmentNames.length > 0) {
+        pdf.setFontSize(8);
+        attachmentNames.forEach((fileName, fileIndex) => {
+          const displayName = fileName.length > 25 ? fileName.substring(0, 22) + '...' : fileName;
+          pdf.text(`• ${displayName}`, pageWidth - margin - 80, yPosition + (fileIndex * 3));
+        });
+        pdf.setFontSize(10);
+        yPosition += Math.max(6, attachmentNames.length * 3);
+      } else {
+        pdf.text('Aucun fichier', pageWidth - margin - 80, yPosition);
+        yPosition += 6;
+      }
     }
   });
 
