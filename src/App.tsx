@@ -407,7 +407,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
     description: string,
     examples: string[]
   ) => (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
         <p className="text-sm text-gray-700 mb-3">{description}</p>
@@ -421,16 +421,16 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
         </div>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {attachments[category].map((group, index) => (
-          <div key={group.id} className="flex gap-3 items-start bg-white p-4 rounded-lg border-2 border-gray-300">
+          <div key={group.id} className="flex gap-2 sm:gap-3 items-start bg-white p-3 sm:p-4 rounded-lg border-2 border-gray-300">
             <div className="flex-1">
               <input
                 type="file"
                 multiple
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                 onChange={(e) => handleFileUpload(category, group.id, e.target.files)}
-                className="w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
               />
               {group.files.length > 0 && (
                 <div className="mt-2 space-y-1">
@@ -447,7 +447,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
               <button
                 type="button"
                 onClick={() => removeAttachmentGroup(category, group.id)}
-                className="mt-3 p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors"
+                className="mt-2 sm:mt-3 p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
@@ -458,7 +458,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
         <button
           type="button"
           onClick={() => addAttachmentGroup(category)}
-          className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition-colors border-2 border-blue-300"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition-colors border-2 border-blue-300"
         >
           <Plus className="w-4 h-4" />
           Ajouter plus de documents {title.toLowerCase()}
@@ -468,11 +468,11 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50 py-4 sm:py-8 px-2 sm:px-4">
       <div className="w-full max-w-[80rem] mx-auto">
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-blue-200">
           {/* Header with Logo */}
-          <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-red-500 px-8 py-10 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-red-500 px-4 sm:px-8 py-6 sm:py-10 relative overflow-hidden">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-15">
               <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-20 -translate-y-20 animate-pulse"></div>
@@ -482,8 +482,8 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             </div>
             
             <div className="relative z-10 flex items-center justify-between">
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
-                <div className="bg-white p-5 rounded-2xl shadow-2xl border-2 border-white/50 transform hover:scale-105 transition-transform duration-300">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full sm:w-auto">
+                <div className="bg-white p-3 sm:p-5 rounded-2xl shadow-2xl border-2 border-white/50 transform hover:scale-105 transition-transform duration-300">
                   <img 
                     src="/Logo SAM Athlétisme 2016-17.png" 
                     alt="SAM Athlétisme Mérignacais" 
@@ -491,14 +491,14 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   />
                 </div>
                 <div className="text-center sm:text-left">
-                  <h1 className="text-2xl sm:text-4xl font-bold text-white flex flex-col sm:flex-row items-center gap-2 sm:gap-4 drop-shadow-lg">
+                  <h1 className="text-xl sm:text-4xl font-bold text-white flex flex-col sm:flex-row items-center gap-1 sm:gap-4 drop-shadow-lg">
                     <span className="text-center sm:text-left">
                       <span className="block sm:inline">Formulaire de Remboursement</span>
                       <span className="block sm:inline sm:ml-2">de Frais</span>
                     </span>
                   </h1>
-                  <p className="text-blue-100 mt-3 text-lg sm:text-xl font-medium text-center sm:text-left">SAM Athlétisme Mérignacais</p>
-                  <p className="text-blue-200 text-sm sm:text-base mt-2 bg-white/10 rounded-lg px-4 py-2 inline-block text-center sm:text-left">
+                  <p className="text-blue-100 mt-2 sm:mt-3 text-base sm:text-xl font-medium text-center sm:text-left">SAM Athlétisme Mérignacais</p>
+                  <p className="text-blue-200 text-xs sm:text-base mt-1 sm:mt-2 bg-white/10 rounded-lg px-3 sm:px-4 py-1 sm:py-2 inline-block text-center sm:text-left">
                     Veuillez remplir tous les champs obligatoires marqués d'un astérisque (*)
                   </p>
                 </div>
@@ -506,15 +506,15 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-10 space-y-10 bg-white">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-10 space-y-6 sm:space-y-10 bg-white">
             {/* Personal Information */}
-            <section className="space-y-6">
-              <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-3 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-4 -m-4 mb-6">
+            <section className="space-y-4 sm:space-y-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-2 sm:pb-3 flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-3 sm:p-4 -m-3 sm:-m-4 mb-4 sm:mb-6">
                 <FileText className="w-8 h-8 text-blue-600" />
                 Informations Personnelles
               </h2>
               
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
@@ -524,7 +524,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     type="text"
                     value={formData.place}
                     onChange={(e) => handleInputChange('place', e.target.value)}
-                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                    className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                       errors.place ? 'border-red-500' : 'border-gray-400'
                     } hover:border-blue-400 transform hover:scale-[1.02]`}
                     placeholder="Saisissez le lieu"
@@ -541,7 +541,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     type="date"
                     value={formData.date}
                     onChange={(e) => handleInputChange('date', e.target.value)}
-                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                    className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                       errors.date ? 'border-red-500' : 'border-gray-400'
                     } hover:border-blue-400 transform hover:scale-[1.02]`}
                   />
@@ -549,7 +549,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
@@ -559,7 +559,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                    className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                       errors.firstName ? 'border-red-500' : 'border-gray-400'
                     } hover:border-blue-400 transform hover:scale-[1.02]`}
                     placeholder="Saisissez votre prénom"
@@ -576,7 +576,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                    className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                       errors.lastName ? 'border-red-500' : 'border-gray-400'
                     } hover:border-blue-400 transform hover:scale-[1.02]`}
                     placeholder="Saisissez votre nom"
@@ -594,7 +594,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   type="text"
                   value={formData.role}
                   onChange={(e) => handleInputChange('role', e.target.value)}
-                  className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                  className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                     errors.role ? 'border-red-500' : 'border-gray-400'
                   } hover:border-blue-400 transform hover:scale-[1.02]`}
                   placeholder="Saisissez votre rôle ou fonction"
@@ -611,7 +611,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   type="text"
                   value={formData.subject}
                   onChange={(e) => handleInputChange('subject', e.target.value)}
-                  className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                  className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                     errors.subject ? 'border-red-500' : 'border-gray-400'
                   } hover:border-blue-400 transform hover:scale-[1.02]`}
                   placeholder="Saisissez l'objet de votre demande"
@@ -627,7 +627,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                 <textarea
                   value={formData.motivation}
                   onChange={(e) => handleInputChange('motivation', e.target.value)}
-                  className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                  className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                     errors.motivation ? 'border-red-500' : 'border-gray-400'
                   } hover:border-blue-400 transform hover:scale-[1.02]`}
                   rows={4}
@@ -636,7 +636,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                 {errors.motivation && <p className="mt-2 text-sm text-red-700 font-medium">{errors.motivation}</p>}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
@@ -646,7 +646,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     type="text"
                     value={formData.paymentMethod}
                     onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                    className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                       errors.paymentMethod ? 'border-red-500' : 'border-gray-400'
                     } hover:border-blue-400 transform hover:scale-[1.02]`}
                     placeholder="Virement bancaire, chèque, etc."
@@ -663,7 +663,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     type="date"
                     value={formData.requestDate}
                     onChange={(e) => handleInputChange('requestDate', e.target.value)}
-                    className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-lg shadow-sm hover:shadow-md ${
+                    className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
                       errors.requestDate ? 'border-red-500' : 'border-gray-400'
                     } hover:border-blue-400 transform hover:scale-[1.02]`}
                   />
@@ -673,8 +673,8 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             </section>
 
             {/* Expenses Section */}
-            <section className="space-y-6">
-              <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-3 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-4 -m-4 mb-6">
+            <section className="space-y-4 sm:space-y-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-2 sm:pb-3 flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-3 sm:p-4 -m-3 sm:-m-4 mb-4 sm:mb-6">
                 <CreditCard className="w-6 h-6 text-blue-600" />
                 Dépenses
               </h2>
@@ -695,11 +695,11 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-300">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-6 border-2 border-gray-300">
                 <div className="space-y-4">
                   {formData.expenses.map((expense, index) => (
-                    <div key={expense.id} className="bg-white p-6 rounded-lg shadow-sm border-2 border-gray-300 space-y-4">
-                      <div className="flex flex-col sm:flex-row gap-4 items-start">
+                    <div key={expense.id} className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border-2 border-gray-300 space-y-3 sm:space-y-4">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start">
                         <div className="w-full sm:flex-1">
                           <label className="block text-sm font-medium text-gray-900 mb-2">
                             Nature de la Dépense
@@ -708,7 +708,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                             type="text"
                             value={expense.nature}
                             onChange={(e) => handleExpenseChange(expense.id, 'nature', e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
                             placeholder="ex: Transport, Repas, Hébergement"
                           />
                         </div>
@@ -721,14 +721,14 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                             step="0.01"
                             value={expense.amount}
                             onChange={(e) => handleExpenseChange(expense.id, 'amount', e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
                             placeholder="0,00"
                           />
                         </div>
                       </div>
                       
                       {/* Justificatifs pour cette dépense */}
-                      <div className="border-t-2 border-gray-300 pt-4">
+                      <div className="border-t-2 border-gray-300 pt-3 sm:pt-4">
                         <label className="block text-sm font-medium text-gray-900 mb-2">
                           Justificatifs pour cette dépense *
                         </label>
@@ -739,7 +739,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                               multiple
                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                               onChange={(e) => handleExpenseAttachment(expense.id, e.target.files)}
-                              className="w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
+                              className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
                             />
                             <p className="text-xs text-gray-600 mt-1">
                               Formats acceptés : PDF, JPG, PNG, DOC, DOCX
@@ -762,7 +762,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                       
                       {/* Delete button - separate row on mobile */}
                       {formData.expenses.length > 1 && (
-                        <div className="flex justify-end mt-4">
+                        <div className="flex justify-end mt-2 sm:mt-4">
                           <button
                             type="button"
                             onClick={() => removeExpenseRow(expense.id)}
@@ -776,7 +776,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   ))}
                 </div>
                 
-                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
                   <div className="w-full sm:w-auto">
                     <button
                       type="button"
@@ -788,7 +788,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     </button>
                   </div>
                   
-                  <div className="w-full sm:w-auto text-center sm:text-right bg-white px-6 py-4 rounded-lg shadow-sm border-2 border-blue-500">
+                  <div className="w-full sm:w-auto text-center sm:text-right bg-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-sm border-2 border-blue-500">
                     <p className="text-sm text-gray-700">Montant Total</p>
                     <p className="text-xl sm:text-2xl font-bold text-blue-600">{totalAmount.toFixed(2)} €</p>
                   </div>
@@ -799,14 +799,14 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             </section>
 
             {/* Kilometric Reimbursement */}
-            <section className="space-y-6">
-              <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-3 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-4 -m-4 mb-6">
+            <section className="space-y-4 sm:space-y-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-2 sm:pb-3 flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-3 sm:p-4 -m-3 sm:-m-4 mb-4 sm:mb-6">
                 <Car className="w-6 h-6 text-blue-600" />
                 Remboursement Kilométrique
               </h2>
               
-              <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-300">
-                <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-6 border-2 border-gray-300">
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-900 mb-2">
                       Nombre de Kilomètres
@@ -815,7 +815,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                       type="number"
                       value={formData.kilometers}
                       onChange={(e) => handleInputChange('kilometers', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-gray-900 hover:border-blue-400"
                       placeholder="0"
                     />
                   </div>
@@ -830,14 +830,14 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   </div>
                 </div>
                 
-                <div className="mt-6 flex justify-end">
-                  <div className="text-right bg-white px-6 py-4 rounded-lg shadow-sm border-2 border-blue-500">
+                <div className="mt-4 sm:mt-6 flex justify-end">
+                  <div className="text-center sm:text-right bg-white px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-sm border-2 border-blue-500">
                     <p className="text-sm text-gray-700">Total Remboursement Kilométrique</p>
                     <p className="text-2xl font-bold text-blue-600">{kilometricReimbursement.toFixed(2)} €</p>
                   </div>
                 </div>
                 
-                <div className="mt-6">
+                <div className="mt-4 sm:mt-6">
                   <label className="flex items-center gap-3">
                     <input
                       type="checkbox"
@@ -851,8 +851,8 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
               </div>
               
               {/* Grand Total */}
-              <div className="bg-gradient-to-r from-blue-600 to-red-600 rounded-xl p-6 text-white shadow-lg border border-blue-500">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+              <div className="bg-gradient-to-r from-blue-600 to-red-600 rounded-xl p-4 sm:p-6 text-white shadow-lg border border-blue-500">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
                   <div className="w-full lg:w-auto">
                     <h3 className="text-xl font-semibold mb-2">Montant Total de la Demande</h3>
                     <div className="space-y-1 text-blue-200">
@@ -869,13 +869,13 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             </section>
 
             {/* Enhanced Attachments Section */}
-            <section className="space-y-8">
-              <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-3 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-4 -m-4 mb-6">
+            <section className="space-y-6 sm:space-y-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-2 sm:pb-3 flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-3 sm:p-4 -m-3 sm:-m-4 mb-4 sm:mb-6">
                 <Upload className="w-6 h-6 text-blue-600" />
                 Pièces Justificatives
               </h2>
               
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 {renderAttachmentSection(
                   'transport',
                   'Documents de Transport',
@@ -917,13 +917,13 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             </section>
 
             {/* Digital Signature */}
-            <section className="space-y-6">
-              <h2 className="text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-3 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-4 -m-4 mb-6">
+            <section className="space-y-4 sm:space-y-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 border-b-4 border-blue-500 pb-2 sm:pb-3 flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-t-xl p-3 sm:p-4 -m-3 sm:-m-4 mb-4 sm:mb-6">
                 <Image className="w-6 h-6" />
                 Signature Numérique *
               </h2>
               
-              <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-300">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-6 border-2 border-gray-300">
                 <p className="text-sm text-gray-700 mb-4">
                   Veuillez télécharger une image de votre signature
                 </p>
@@ -990,7 +990,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             </section>
 
             {/* Submit Button */}
-            <div className="border-t-2 border-blue-500 pt-8">
+            <div className="border-t-2 border-blue-500 pt-4 sm:pt-8">
               {submitStatus === 'success' && (
                 <div className="mb-6 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
                   <div className="flex items-center gap-2 text-green-700">
@@ -1014,7 +1014,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full py-4 px-6 rounded-xl font-medium text-white transition-all shadow-lg ${
+                className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-medium text-white transition-all shadow-lg ${
                   isSubmitting
                     ? 'bg-gray-600 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-600 via-blue-700 to-red-600 hover:from-blue-700 hover:via-blue-800 hover:to-red-700 focus:ring-4 focus:ring-blue-500 transform hover:scale-[1.02] border-2 border-blue-500'
