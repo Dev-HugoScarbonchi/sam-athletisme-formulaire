@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, FileText, Car, CreditCard, Upload, CheckCircle, AlertCircle, Image } from 'lucide-react';
+import { Plus, Trash2, FileText, Car, CreditCard, Upload, CheckCircle, AlertCircle, Image, Shield } from 'lucide-react';
 import { generateExpenseReportPDF } from './utils/pdfGenerator';
 
 interface ExpenseRow {
@@ -56,9 +56,6 @@ function App() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Enhanced attachment system
@@ -170,8 +167,8 @@ function App() {
     const file = files[0];
     
     // Validate file type
-    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      setErrors(prev => ({ ...prev, signature: 'Veuillez sélectionner un fichier image (JPG, PNG, GIF, BMP, WEBP) ou PDF' }));
+    if (!file.type.startsWith('image/')) {
+      setErrors(prev => ({ ...prev, signature: 'Veuillez sélectionner un fichier image (JPG, PNG, GIF, BMP, WEBP)' }));
       return;
     }
     
@@ -181,24 +178,16 @@ function App() {
       return;
     }
     
-    // Clear any existing drawn signature
-    clearSignature();
-    
     setFormData(prev => ({ ...prev, signatureFile: file }));
     
-    // Create preview URL for images only
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setFormData(prev => ({ ...prev, signature: e.target!.result as string }));
-        }
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // For PDF, just set a placeholder
-      setFormData(prev => ({ ...prev, signature: 'pdf-uploaded' }));
-    }
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setFormData(prev => ({ ...prev, signature: e.target!.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
     
     // Clear any signature errors
     if (errors.signature) {
@@ -206,58 +195,7 @@ function App() {
     }
   };
 
-  // Signature pad functionality
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    // Clear any uploaded signature file when starting to draw
-    if (formData.signatureFile) {
-      setFormData(prev => ({ ...prev, signatureFile: null }));
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-    
-    setIsDrawing(true);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-    const canvas = canvasRef.current;
-    if (canvas) {
-      setFormData(prev => ({ ...prev, signature: canvas.toDataURL() }));
-    }
-  };
-
   const clearSignature = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     setFormData(prev => ({ ...prev, signature: '', signatureFile: null }));
     
     // Clear file input
@@ -265,20 +203,6 @@ function App() {
       fileInputRef.current.value = '';
     }
   };
-
-  // Initialize canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    ctx.strokeStyle = '#1f2937';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-  }, []);
 
   // Form validation
   const validateForm = (): boolean => {
@@ -294,9 +218,9 @@ function App() {
     if (!formData.paymentMethod.trim()) newErrors.paymentMethod = 'Le mode de paiement est requis';
     if (!formData.requestDate) newErrors.requestDate = 'La date de demande est requise';
     
-    // Validate signature (either drawn or uploaded)
-    if (!formData.signature && !formData.signatureFile) {
-      newErrors.signature = 'La signature est requise (dessinée ou téléchargée)';
+    // Validate signature (uploaded only)
+    if (!formData.signatureFile) {
+      newErrors.signature = 'La signature est requise (fichier image)';
     }
     
     // Validate expenses
@@ -406,11 +330,11 @@ function App() {
   ) => (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
-        <p className="text-sm text-gray-600 mb-3">{description}</p>
-        <div className="bg-gradient-to-r from-blue-50 to-red-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-sm text-blue-800 font-medium mb-1">Documents acceptés :</p>
-          <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
+        <h3 className="text-lg font-semibold text-gray-200 mb-2">{title}</h3>
+        <p className="text-sm text-gray-400 mb-3">{description}</p>
+        <div className="bg-gradient-to-r from-blue-900/30 to-red-900/30 border border-blue-500/30 rounded-lg p-4">
+          <p className="text-sm text-blue-300 font-medium mb-2">Documents acceptés :</p>
+          <ul className="text-sm text-blue-200 list-disc list-inside space-y-1">
             {examples.map((example, index) => (
               <li key={index}>{example}</li>
             ))}
@@ -420,19 +344,19 @@ function App() {
       
       <div className="space-y-3">
         {attachments[category].map((group, index) => (
-          <div key={group.id} className="flex gap-3 items-start">
+          <div key={group.id} className="flex gap-3 items-start bg-gray-800 p-4 rounded-lg border border-gray-600">
             <div className="flex-1">
               <input
                 type="file"
                 multiple
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                 onChange={(e) => handleFileUpload(category, group.id, e.target.files)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white hover:border-blue-400"
               />
               {group.files.length > 0 && (
                 <div className="mt-2 space-y-1">
                   {group.files.map((file, fileIndex) => (
-                    <p key={fileIndex} className="text-sm text-green-600 flex items-center gap-1">
+                    <p key={fileIndex} className="text-sm text-green-400 flex items-center gap-1">
                       <CheckCircle className="w-4 h-4" />
                       {file.name}
                     </p>
@@ -444,7 +368,7 @@ function App() {
               <button
                 type="button"
                 onClick={() => removeAttachmentGroup(category, group.id)}
-                className="mt-3 p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                className="mt-3 p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded-lg transition-colors"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
@@ -455,7 +379,7 @@ function App() {
         <button
           type="button"
           onClick={() => addAttachmentGroup(category)}
-          className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 rounded-lg transition-colors border border-blue-500/30"
         >
           <Plus className="w-4 h-4" />
           Ajouter plus de documents {title.toLowerCase()}
@@ -465,71 +389,73 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-black py-8 px-4">
       <div className="w-full max-w-[80rem] mx-auto">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+        <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
           {/* Header with Logo */}
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-red-600 px-8 py-8 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-800 to-red-600 px-8 py-8 relative overflow-hidden">
             {/* Background pattern */}
-            <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 opacity-20">
               <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
               <div className="absolute bottom-0 right-0 w-24 h-24 bg-white rounded-full translate-x-12 translate-y-12"></div>
+              <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-red-400 rounded-full -translate-x-8 -translate-y-8"></div>
             </div>
             
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center gap-6">
-                <div className="bg-white p-3 rounded-xl shadow-lg">
-                  <div className="h-16 w-16 bg-gradient-to-br from-blue-600 to-red-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">SAM</span>
+                <div className="bg-white p-4 rounded-xl shadow-2xl border border-gray-300">
+                  <div className="h-16 w-16 bg-gradient-to-br from-blue-600 to-red-600 rounded-lg flex items-center justify-center shadow-inner">
+                    <span className="text-white font-bold text-xl tracking-wider">SAM</span>
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <FileText className="w-8 h-8" />
+                  <h1 className="text-3xl font-bold text-white flex items-center gap-3 drop-shadow-lg">
+                    <Shield className="w-8 h-8" />
                     Formulaire de Remboursement de Frais
                   </h1>
-                  <p className="text-blue-100 mt-2 text-lg">SAM Athlétisme Mérignacais</p>
-                  <p className="text-blue-200 text-sm">Veuillez remplir tous les champs obligatoires marqués d'un astérisque (*)</p>
+                  <p className="text-blue-100 mt-2 text-lg font-medium">SAM Athlétisme Mérignacais</p>
+                  <p className="text-blue-200 text-sm mt-1">Veuillez remplir tous les champs obligatoires marqués d'un astérisque (*)</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+          <form onSubmit={handleSubmit} className="p-8 space-y-8 bg-gray-800">
             {/* Personal Information */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2">
+              <h2 className="text-2xl font-semibold text-blue-400 border-b-2 border-blue-500 pb-2 flex items-center gap-2">
+                <FileText className="w-6 h-6" />
                 Informations Personnelles
               </h2>
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Lieu *
                   </label>
                   <input
                     type="text"
                     value={formData.place}
                     onChange={(e) => handleInputChange('place', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.place ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                      errors.place ? 'border-red-500' : 'border-gray-600'
+                    } hover:border-blue-400`}
                     placeholder="Saisissez le lieu"
                   />
                   {errors.place && <p className="mt-1 text-sm text-red-600">{errors.place}</p>}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Date *
                   </label>
                   <input
                     type="date"
                     value={formData.date}
                     onChange={(e) => handleInputChange('date', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.date ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                      errors.date ? 'border-red-500' : 'border-gray-600'
+                    } hover:border-blue-400`}
                   />
                   {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
                 </div>
@@ -537,32 +463,32 @@ function App() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Prénom *
                   </label>
                   <input
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.firstName ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                      errors.firstName ? 'border-red-500' : 'border-gray-600'
+                    } hover:border-blue-400`}
                     placeholder="Saisissez votre prénom"
                   />
                   {errors.firstName && <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Nom *
                   </label>
                   <input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.lastName ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                      errors.lastName ? 'border-red-500' : 'border-gray-600'
+                    } hover:border-blue-400`}
                     placeholder="Saisissez votre nom"
                   />
                   {errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>}
@@ -570,47 +496,47 @@ function App() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Rôle/Fonction *
                 </label>
                 <input
                   type="text"
                   value={formData.role}
                   onChange={(e) => handleInputChange('role', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.role ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    errors.role ? 'border-red-500' : 'border-gray-600'
+                  } hover:border-blue-400`}
                   placeholder="Saisissez votre rôle ou fonction"
                 />
                 {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Objet de la Demande *
                 </label>
                 <input
                   type="text"
                   value={formData.subject}
                   onChange={(e) => handleInputChange('subject', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.subject ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    errors.subject ? 'border-red-500' : 'border-gray-600'
+                  } hover:border-blue-400`}
                   placeholder="Saisissez l'objet de votre demande"
                 />
                 {errors.subject && <p className="mt-1 text-sm text-red-600">{errors.subject}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Motivation *
                 </label>
                 <textarea
                   value={formData.motivation}
                   onChange={(e) => handleInputChange('motivation', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    errors.motivation ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                    errors.motivation ? 'border-red-500' : 'border-gray-600'
+                  } hover:border-blue-400`}
                   rows={4}
                   placeholder="Expliquez la motivation de cette demande de remboursement"
                 />
@@ -619,32 +545,32 @@ function App() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Mode de Paiement *
                   </label>
                   <input
                     type="text"
                     value={formData.paymentMethod}
                     onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.paymentMethod ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                      errors.paymentMethod ? 'border-red-500' : 'border-gray-600'
+                    } hover:border-blue-400`}
                     placeholder="Virement bancaire, chèque, etc."
                   />
                   {errors.paymentMethod && <p className="mt-1 text-sm text-red-600">{errors.paymentMethod}</p>}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Date de la Demande *
                   </label>
                   <input
                     type="date"
                     value={formData.requestDate}
                     onChange={(e) => handleInputChange('requestDate', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      errors.requestDate ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white ${
+                      errors.requestDate ? 'border-red-500' : 'border-gray-600'
+                    } hover:border-blue-400`}
                   />
                   {errors.requestDate && <p className="mt-1 text-sm text-red-600">{errors.requestDate}</p>}
                 </div>
@@ -653,46 +579,46 @@ function App() {
 
             {/* Expenses Section */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 flex items-center gap-2">
+              <h2 className="text-2xl font-semibold text-blue-400 border-b-2 border-blue-500 pb-2 flex items-center gap-2">
                 <CreditCard className="w-6 h-6 text-blue-600" />
                 Dépenses
               </h2>
               
               {/* Warning about required documents */}
-              <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 p-6 rounded-lg shadow-sm">
+              <div className="bg-gradient-to-r from-red-900/30 to-orange-900/30 border-l-4 border-red-500 p-6 rounded-lg shadow-sm border border-red-500/30">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="text-lg font-semibold text-red-800 mb-2">À JOINDRE OBLIGATOIREMENT</h3>
-                    <ul className="text-red-700 space-y-1 list-disc list-inside">
+                    <h3 className="text-lg font-semibold text-red-400 mb-2">À JOINDRE OBLIGATOIREMENT</h3>
+                    <ul className="text-red-300 space-y-1 list-disc list-inside">
                       <li><strong>Factures</strong> (les tickets de caisse ne sont pas admis)</li>
                       <li><strong>Si utilisation du véhicule personnel :</strong> la carte grise</li>
                       <li><strong>RIB</strong> (Relevé d'Identité Bancaire)</li>
                     </ul>
-                    <p className="mt-3 text-red-800 font-medium">⚠️ Les dossiers incomplets ne seront pas traités</p>
+                    <p className="mt-3 text-red-400 font-medium">⚠️ Les dossiers incomplets ne seront pas traités</p>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border border-blue-100">
+              <div className="bg-gradient-to-br from-gray-700 to-blue-900/30 rounded-xl p-6 border border-blue-500/30">
                 <div className="space-y-4">
                   {formData.expenses.map((expense, index) => (
-                    <div key={expense.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
+                    <div key={expense.id} className="bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-600 space-y-4">
                       <div className="flex gap-4 items-start">
                         <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
                             Nature de la Dépense
                           </label>
                           <input
                             type="text"
                             value={expense.nature}
                             onChange={(e) => handleExpenseChange(expense.id, 'nature', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white hover:border-blue-400"
                             placeholder="ex: Transport, Repas, Hébergement"
                           />
                         </div>
                         <div className="w-32">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
                             Montant (€)
                           </label>
                           <input
@@ -700,7 +626,7 @@ function App() {
                             step="0.01"
                             value={expense.amount}
                             onChange={(e) => handleExpenseChange(expense.id, 'amount', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white hover:border-blue-400"
                             placeholder="0,00"
                           />
                         </div>
@@ -708,7 +634,7 @@ function App() {
                           <button
                             type="button"
                             onClick={() => removeExpenseRow(expense.id)}
-                            className="mt-8 p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                            className="mt-8 p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded-lg transition-colors"
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -716,8 +642,8 @@ function App() {
                       </div>
                       
                       {/* Justificatifs pour cette dépense */}
-                      <div className="border-t border-gray-200 pt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="border-t border-gray-600 pt-4">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
                           Justificatifs pour cette dépense *
                         </label>
                         <div className="flex gap-3 items-start">
@@ -727,9 +653,9 @@ function App() {
                               multiple
                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                               onChange={(e) => handleExpenseAttachment(expense.id, e.target.files)}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                              className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white hover:border-blue-400"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-400 mt-1">
                               Formats acceptés : PDF, JPG, PNG, DOC, DOCX
                             </p>
                           </div>
@@ -737,7 +663,7 @@ function App() {
                         
                         {expense.attachments.length > 0 && (
                           <div className="mt-3 space-y-1">
-                            <p className="text-sm font-medium text-gray-700">Fichiers joints :</p>
+                            <p className="text-sm font-medium text-gray-300">Fichiers joints :</p>
                             {expense.attachments.map((file, fileIndex) => (
                               <p key={fileIndex} className="text-sm text-green-600 flex items-center gap-1">
                                 <CheckCircle className="w-4 h-4" />
@@ -755,15 +681,15 @@ function App() {
                   <button
                     type="button"
                     onClick={addExpenseRow}
-                    className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 rounded-lg transition-colors"
                   >
                     <Plus className="w-5 h-5" />
                     Ajouter une Dépense
                   </button>
                   
-                  <div className="text-right bg-white px-6 py-4 rounded-lg shadow-sm border border-blue-200">
-                    <p className="text-sm text-gray-600">Montant Total</p>
-                    <p className="text-2xl font-bold text-blue-700">{totalAmount.toFixed(2)} €</p>
+                  <div className="text-right bg-gray-800 px-6 py-4 rounded-lg shadow-sm border border-blue-500">
+                    <p className="text-sm text-gray-400">Montant Total</p>
+                    <p className="text-2xl font-bold text-blue-400">{totalAmount.toFixed(2)} €</p>
                   </div>
                 </div>
                 
@@ -773,40 +699,40 @@ function App() {
 
             {/* Kilometric Reimbursement */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 flex items-center gap-2">
+              <h2 className="text-2xl font-semibold text-blue-400 border-b-2 border-blue-500 pb-2 flex items-center gap-2">
                 <Car className="w-6 h-6 text-blue-600" />
                 Remboursement Kilométrique
               </h2>
               
-              <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border border-blue-100">
+              <div className="bg-gradient-to-br from-gray-700 to-blue-900/30 rounded-xl p-6 border border-blue-500/30">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Nombre de Kilomètres
                     </label>
                     <input
                       type="number"
                       value={formData.kilometers}
                       onChange={(e) => handleInputChange('kilometers', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-700 text-white hover:border-blue-400"
                       placeholder="0"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Montant du Remboursement (0,321 €/km)
                     </label>
-                    <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-red-700 font-medium shadow-sm">
+                    <div className="w-full px-4 py-3 border border-gray-600 rounded-lg bg-gray-800 text-red-400 font-medium shadow-sm">
                       {kilometricReimbursement.toFixed(2)} €
                     </div>
                   </div>
                 </div>
                 
                 <div className="mt-6 flex justify-end">
-                  <div className="text-right bg-white px-6 py-4 rounded-lg shadow-sm border border-blue-200">
-                    <p className="text-sm text-gray-600">Total Remboursement Kilométrique</p>
-                    <p className="text-2xl font-bold text-blue-700">{kilometricReimbursement.toFixed(2)} €</p>
+                  <div className="text-right bg-gray-800 px-6 py-4 rounded-lg shadow-sm border border-blue-500">
+                    <p className="text-sm text-gray-400">Total Remboursement Kilométrique</p>
+                    <p className="text-2xl font-bold text-blue-400">{kilometricReimbursement.toFixed(2)} €</p>
                   </div>
                 </div>
                 
@@ -816,25 +742,25 @@ function App() {
                       type="checkbox"
                       checked={formData.rentalVehicle}
                       onChange={(e) => handleInputChange('rentalVehicle', e.target.checked)}
-                      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 bg-gray-700 border-gray-600"
                     />
-                    <span className="text-sm text-gray-700">Véhicule de location utilisé</span>
+                    <span className="text-sm text-gray-300">Véhicule de location utilisé</span>
                   </label>
                 </div>
               </div>
               
               {/* Grand Total */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
+              <div className="bg-gradient-to-r from-blue-600 to-red-600 rounded-xl p-6 text-white shadow-lg border border-blue-500">
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="text-xl font-semibold mb-2">Montant Total de la Demande</h3>
-                    <div className="space-y-1 text-blue-100">
+                    <div className="space-y-1 text-blue-200">
                       <p>• Dépenses diverses: {totalAmount.toFixed(2)} €</p>
                       <p>• Remboursement kilométrique: {kilometricReimbursement.toFixed(2)} €</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-blue-200">TOTAL GÉNÉRAL</p>
+                    <p className="text-sm text-blue-300">TOTAL GÉNÉRAL</p>
                     <p className="text-4xl font-bold">{(totalAmount + kilometricReimbursement).toFixed(2)} €</p>
                   </div>
                 </div>
@@ -843,7 +769,7 @@ function App() {
 
             {/* Enhanced Attachments Section */}
             <section className="space-y-8">
-              <h2 className="text-2xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2 flex items-center gap-2">
+              <h2 className="text-2xl font-semibold text-blue-400 border-b-2 border-blue-500 pb-2 flex items-center gap-2">
                 <Upload className="w-6 h-6 text-blue-600" />
                 Pièces Justificatives
               </h2>
@@ -891,79 +817,57 @@ function App() {
 
             {/* Digital Signature */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-semibold text-blue-700 border-b-2 border-blue-200 pb-2">
+              <h2 className="text-2xl font-semibold text-blue-400 border-b-2 border-blue-500 pb-2 flex items-center gap-2">
+                <Image className="w-6 h-6" />
                 Signature Numérique *
               </h2>
               
-              <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border border-blue-100">
-                <p className="text-sm text-gray-600 mb-4">
-                  Veuillez signer dans la zone ci-dessous en utilisant votre souris ou votre écran tactile, ou télécharger une image de votre signature
+              <div className="bg-gradient-to-br from-gray-700 to-blue-900/30 rounded-xl p-6 border border-blue-500/30">
+                <p className="text-sm text-gray-300 mb-4">
+                  Veuillez télécharger une image de votre signature
                 </p>
                 
-                <div className="border-2 border-gray-300 rounded-lg overflow-hidden mb-4 shadow-sm">
-                  <canvas
-                    ref={canvasRef}
-                    width={600}
-                    height={200}
-                    className="w-full h-48 bg-white cursor-crosshair"
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                  />
-                </div>
-                
-                <div className="flex flex-wrap gap-4 items-center justify-between">
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={clearSignature}
-                      className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="relative">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleSignatureFileUpload(e.target.files)}
+                      className="hidden"
+                      id="signature-upload"
+                    />
+                    <label
+                      htmlFor="signature-upload"
+                      className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-lg transition-colors cursor-pointer shadow-lg border border-blue-500"
                     >
-                      Effacer la Signature
-                    </button>
-                    
-                    <div className="relative">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={(e) => handleSignatureFileUpload(e.target.files)}
-                        className="hidden"
-                        id="signature-upload"
-                      />
-                      <label
-                        htmlFor="signature-upload"
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-lg transition-colors cursor-pointer shadow-sm"
-                      >
-                        <Image className="w-4 h-4" />
-                        Télécharger une Signature
-                      </label>
-                    </div>
+                      <Image className="w-5 h-5" />
+                      Télécharger une Signature
+                    </label>
                   </div>
                   
-                  <div className="flex items-center gap-4">
-                    {formData.signature && !formData.signatureFile && (
-                      <p className="text-sm text-green-600 flex items-center gap-1">
-                        <CheckCircle className="w-4 h-4" />
-                        Signature dessinée
-                      </p>
-                    )}
-                    
-                    {formData.signatureFile && (
-                      <p className="text-sm text-green-600 flex items-center gap-1">
+                  {formData.signatureFile && (
+                    <div className="flex items-center gap-4">
+                      <p className="text-sm text-green-400 flex items-center gap-1">
                         <CheckCircle className="w-4 h-4" />
                         Signature téléchargée: {formData.signatureFile.name}
                       </p>
-                    )}
-                  </div>
+                      <button
+                        type="button"
+                        onClick={clearSignature}
+                        className="px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded-lg transition-colors border border-red-500/30"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Image preview for uploaded signature */}
-                {formData.signature && formData.signatureFile && formData.signatureFile.type.startsWith('image/') && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-600 mb-2">Aperçu de votre signature :</p>
-                    <div className="border border-gray-300 rounded-lg p-4 bg-white max-w-md shadow-sm">
+                {formData.signature && formData.signatureFile && (
+                  <div className="mt-6">
+                    <p className="text-sm text-gray-300 mb-3">Aperçu de votre signature :</p>
+                    <div className="border border-gray-600 rounded-lg p-4 bg-gray-800 max-w-md shadow-sm">
                       <img
                         src={formData.signature}
                         alt="Signature preview"
@@ -973,10 +877,10 @@ function App() {
                   </div>
                 )}
                 
-                <div className="mt-4 bg-gradient-to-r from-blue-50 to-red-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
-                    <strong>Note :</strong> Vous pouvez soit dessiner votre signature dans la zone ci-dessus, soit télécharger une image de votre signature. 
-                    Formats acceptés pour le téléchargement : JPG, PNG, GIF, BMP, WEBP, PDF (max 5MB).
+                <div className="mt-4 bg-gradient-to-r from-blue-900/30 to-red-900/30 border border-blue-500/30 rounded-lg p-4">
+                  <p className="text-sm text-blue-300">
+                    <strong>Note :</strong> Téléchargez une image claire de votre signature. 
+                    Formats acceptés : JPG, PNG, GIF, BMP, WEBP (max 5MB).
                   </p>
                 </div>
                 
@@ -985,24 +889,24 @@ function App() {
             </section>
 
             {/* Submit Button */}
-            <div className="border-t-2 border-blue-200 pt-8">
+            <div className="border-t-2 border-blue-500 pt-8">
               {submitStatus === 'success' && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-800">
+                <div className="mb-6 p-4 bg-gradient-to-r from-green-900/30 to-blue-900/30 border border-green-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-400">
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-medium">Formulaire soumis avec succès !</span>
                   </div>
-                  <p className="text-green-700 mt-1">Votre demande de remboursement de frais a été envoyée pour traitement.</p>
+                  <p className="text-green-300 mt-1">Votre demande de remboursement de frais a été envoyée pour traitement.</p>
                 </div>
               )}
               
               {submitStatus === 'error' && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-800">
+                <div className="mb-6 p-4 bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-red-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-red-400">
                     <AlertCircle className="w-5 h-5" />
                     <span className="font-medium">Échec de la soumission</span>
                   </div>
-                  <p className="text-red-700 mt-1">Une erreur s'est produite lors de la soumission de votre formulaire. Veuillez réessayer.</p>
+                  <p className="text-red-300 mt-1">Une erreur s'est produite lors de la soumission de votre formulaire. Veuillez réessayer.</p>
                 </div>
               )}
               
@@ -1011,8 +915,8 @@ function App() {
                 disabled={isSubmitting}
                 className={`w-full py-4 px-6 rounded-xl font-medium text-white transition-all shadow-lg ${
                   isSubmitting
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 via-blue-700 to-red-600 hover:from-blue-700 hover:via-blue-800 hover:to-red-700 focus:ring-4 focus:ring-blue-300 transform hover:scale-[1.02]'
+                    ? 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 via-blue-700 to-red-600 hover:from-blue-700 hover:via-blue-800 hover:to-red-700 focus:ring-4 focus:ring-blue-500 transform hover:scale-[1.02] border border-blue-500'
                 }`}
               >
                 {isSubmitting ? 'Envoi en cours...' : 'Soumettre la Demande de Remboursement de Frais'}
