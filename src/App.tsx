@@ -482,21 +482,23 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
             </div>
             
             <div className="relative z-10 flex items-center justify-between">
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
                 <div className="bg-white p-5 rounded-2xl shadow-2xl border-2 border-white/50 transform hover:scale-105 transition-transform duration-300">
                   <img 
                     src="/Logo SAM Athlétisme 2016-17.png" 
                     alt="SAM Athlétisme Mérignacais" 
-                    className="h-20 w-20 object-contain rounded-xl shadow-inner"
+                    className="h-16 w-16 sm:h-20 sm:w-20 object-contain rounded-xl shadow-inner"
                   />
                 </div>
-                <div>
-                  <h1 className="text-4xl font-bold text-white flex items-center gap-4 drop-shadow-lg">
-                    <Shield className="w-10 h-10 animate-pulse" />
-                    Formulaire de Remboursement de Frais
+                <div className="text-center sm:text-left">
+                  <h1 className="text-2xl sm:text-4xl font-bold text-white flex flex-col sm:flex-row items-center gap-2 sm:gap-4 drop-shadow-lg">
+                    <span className="text-center sm:text-left">
+                      <span className="block sm:inline">Formulaire de Remboursement</span>
+                      <span className="block sm:inline sm:ml-2">de Frais</span>
+                    </span>
                   </h1>
-                  <p className="text-blue-100 mt-3 text-xl font-medium">SAM Athlétisme Mérignacais</p>
-                  <p className="text-blue-200 text-base mt-2 bg-white/10 rounded-lg px-4 py-2 inline-block">
+                  <p className="text-blue-100 mt-3 text-lg sm:text-xl font-medium text-center sm:text-left">SAM Athlétisme Mérignacais</p>
+                  <p className="text-blue-200 text-sm sm:text-base mt-2 bg-white/10 rounded-lg px-4 py-2 inline-block text-center sm:text-left">
                     Veuillez remplir tous les champs obligatoires marqués d'un astérisque (*)
                   </p>
                 </div>
