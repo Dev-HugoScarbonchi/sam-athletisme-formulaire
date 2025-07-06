@@ -36,6 +36,55 @@ interface FormErrors {
   [key: string]: string;
 }
 
+interface ValidationError {
+  field: string;
+  message: string;
+  inputRef?: string;
+}
+
+interface ErrorPopupProps {
+  errors: ValidationError[];
+  onClose: () => void;
+}
+
+const ErrorPopup: React.FC<ErrorPopupProps> = ({ errors, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-96 overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center mb-4">
+            <AlertCircle className="w-6 h-6 text-red-500 mr-2" />
+            <h3 className="text-lg font-semibold text-gray-900">Erreurs de validation</h3>
+          </div>
+          
+          <p className="text-gray-600 mb-4">
+            Veuillez corriger les erreurs suivantes avant de soumettre le formulaire :
+          </p>
+          
+          <div className="space-y-2 mb-6">
+            {errors.map((error, index) => (
+              <div key={index} className="flex items-start space-x-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="font-medium text-gray-900">{error.field}</p>
+                  <p className="text-sm text-gray-600">{error.message}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <button
+            onClick={onClose}
+            className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Fermer et corriger
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [formData, setFormData] = useState<FormData>({
     place: '',
@@ -57,6 +106,8 @@ function App() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Enhanced attachment system
@@ -79,12 +130,97 @@ function App() {
   // Calculate kilometric reimbursement
   const kilometricReimbursement = (parseFloat(formData.kilometers) || 0) * 0.321;
 
+  const validateFormNew = (): ValidationError[] => {
+    const errors: ValidationError[] = [];
+
+    // Validation des champs obligatoires
+    if (!formData.place.trim()) {
+      errors.push({ field: 'Lieu', message: 'Le lieu est obligatoire', inputRef: 'place' });
+    }
+    if (!formData.date) {
+      errors.push({ field: 'Date', message: 'La date est obligatoire', inputRef: 'date' });
+    }
+    if (!formData.firstName.trim()) {
+      errors.push({ field: 'Prénom', message: 'Le prénom est obligatoire', inputRef: 'firstName' });
+    }
+    if (!formData.lastName.trim()) {
+      errors.push({ field: 'Nom', message: 'Le nom est obligatoire', inputRef: 'lastName' });
+    }
+    if (!formData.role.trim()) {
+      errors.push({ field: 'Rôle/Fonction', message: 'Le rôle est obligatoire', inputRef: 'role' });
+    }
+    if (!formData.subject.trim()) {
+      errors.push({ field: 'Objet de la demande', message: 'L\'objet est obligatoire', inputRef: 'subject' });
+    }
+    if (!formData.motivation.trim()) {
+      errors.push({ field: 'Motivation', message: 'La motivation est obligatoire', inputRef: 'motivation' });
+    }
+
+    // Validation des dépenses
+    const validExpenses = formData.expenses.filter(expense => 
+      expense.nature.trim() && expense.amount.trim()
+    );
+
+    if (validExpenses.length === 0 && (!formData.kilometers || parseFloat(formData.kilometers) <= 0)) {
+      errors.push({ 
+        field: 'Dépenses', 
+        message: 'Au moins une dépense ou un remboursement kilométrique est requis',
+        inputRef: 'expenses'
+      });
+    }
+
+    // Validation des montants
+    validExpenses.forEach((expense, index) => {
+      const amount = parseFloat(expense.amount);
+      if (isNaN(amount) || amount <= 0) {
+        errors.push({ 
+          field: `Dépense ${index + 1}`, 
+          message: 'Le montant doit être un nombre positif',
+          inputRef: `expense-${expense.id}`
+        });
+      }
+    });
+
+    // Validation kilométrique
+    if (formData.kilometers && formData.kilometers.trim()) {
+      const km = parseFloat(formData.kilometers);
+      if (isNaN(km) || km <= 0) {
+        errors.push({ 
+          field: 'Kilométrage', 
+          message: 'Le nombre de kilomètres doit être un nombre positif',
+          inputRef: 'kilometers'
+        });
+      }
+    }
+
+    // Validation de la signature
+    if (!formData.signature && !formData.signatureFile) {
+      errors.push({ 
+        field: 'Signature', 
+        message: 'Une signature est obligatoire (dessinée ou uploadée)',
+        inputRef: 'signature'
+      });
+    }
+
+    return errors;
+  };
+
+  const scrollToError = (inputRef: string) => {
+    const element = document.getElementById(inputRef) || document.querySelector(`[data-field="${inputRef}"]`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.focus();
+    }
+  };
+
   // Handle input changes
   const handleInputChange = (field: keyof FormData, value: string | boolean | File | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+    // Clear validation errors for this field when user starts typing
+    setValidationErrors(prev => prev.filter(error => error.inputRef !== field));
   };
 
   // Handle expense row changes
@@ -95,6 +231,8 @@ function App() {
         expense.id === id ? { ...expense, [field]: value } : expense
       )
     }));
+    // Clear validation errors for this expense when user starts typing
+    setValidationErrors(prev => prev.filter(error => error.inputRef !== `expense-${id}`));
   };
 
   // Add new expense row
@@ -194,6 +332,9 @@ function App() {
     if (errors.signature) {
       setErrors(prev => ({ ...prev, signature: '' }));
     }
+    
+    // Clear signature validation error
+    setValidationErrors(prev => prev.filter(error => error.inputRef !== 'signature'));
   };
 
   const clearSignature = () => {
@@ -234,11 +375,40 @@ function App() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const generatePDF = async () => {
+    // Validate form before generating PDF
+    const errors = validateFormNew();
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setShowErrorPopup(true);
+      return null;
+    }
+
+    try {
+      const pdfBlob = await generateExpenseReportPDF(formData, totalAmount, kilometricReimbursement);
+      return pdfBlob;
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      setValidationErrors([{ 
+        field: 'Génération PDF', 
+        message: 'Erreur lors de la génération du PDF. Veuillez réessayer.' 
+      }]);
+      setShowErrorPopup(true);
+      return null;
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    // Validate form first
+    const errors = validateFormNew();
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setShowErrorPopup(true);
+      return;
+    }
     
     setIsSubmitting(true);
     setSubmitStatus('idle');
@@ -247,7 +417,11 @@ function App() {
       const formDataToSend = new FormData();
       
       // Generate PDF summary
-      const pdfBlob = await generateExpenseReportPDF(formData, totalAmount, kilometricReimbursement);
+      const pdfBlob = await generatePDF();
+      if (!pdfBlob) {
+        setIsSubmitting(false);
+        return;
+      }
       formDataToSend.append('summary_pdf', pdfBlob, 'fiche_remboursement.pdf');
       
       // Automatically download PDF for user
@@ -397,6 +571,11 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
     } catch (error) {
       console.error('Erreur lors de l\'envoi:', error);
       setSubmitStatus('error');
+      setValidationErrors([{ 
+        field: 'Envoi du formulaire', 
+        message: error instanceof Error ? error.message : 'Erreur inconnue lors de l\'envoi. Veuillez réessayer.' 
+      }]);
+      setShowErrorPopup(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -470,6 +649,18 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50 py-4 sm:py-8 px-2 sm:px-4">
+      {showErrorPopup && (
+        <ErrorPopup 
+          errors={validationErrors} 
+          onClose={() => {
+            setShowErrorPopup(false);
+            if (validationErrors.length > 0 && validationErrors[0].inputRef) {
+              scrollToError(validationErrors[0].inputRef);
+            }
+          }} 
+        />
+      )}
+
       <div className="w-full max-w-[80rem] mx-auto">
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-blue-200">
           {/* Header with Logo */}
@@ -548,6 +739,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     Lieu *
                   </label>
                   <input
+                    id="place"
                     type="text"
                     value={formData.place}
                     onChange={(e) => handleInputChange('place', e.target.value)}
@@ -566,6 +758,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     <span className="md:hidden text-xs font-normal text-gray-600 ml-2">(cliquer sur le champ pour entrer la date)</span>
                   </label>
                   <input
+                    id="date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => handleInputChange('date', e.target.value)}
@@ -588,6 +781,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     Prénom *
                   </label>
                   <input
+                    id="firstName"
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -605,6 +799,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     Nom *
                   </label>
                   <input
+                    id="lastName"
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
@@ -623,6 +818,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   Rôle/Fonction *
                 </label>
                 <input
+                  id="role"
                   type="text"
                   value={formData.role}
                   onChange={(e) => handleInputChange('role', e.target.value)}
@@ -640,6 +836,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   Objet de la Demande *
                 </label>
                 <input
+                  id="subject"
                   type="text"
                   value={formData.subject}
                   onChange={(e) => handleInputChange('subject', e.target.value)}
@@ -657,6 +854,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   Motivation *
                 </label>
                 <textarea
+                  id="motivation"
                   value={formData.motivation}
                   onChange={(e) => handleInputChange('motivation', e.target.value)}
                   className={`w-full px-3 sm:px-5 py-3 sm:py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 bg-white text-gray-900 text-base sm:text-lg shadow-sm hover:shadow-md ${
@@ -733,7 +931,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
               </div>
               
               <div className="bg-gray-50 rounded-xl p-3 sm:p-6 border-2 border-gray-300">
-                <div className="space-y-4">
+                <div className="space-y-4" data-field="expenses">
                   {formData.expenses.map((expense, index) => (
                     <div key={expense.id} className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border-2 border-gray-300 space-y-3 sm:space-y-4">
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start">
@@ -742,6 +940,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                             Nature de la Dépense
                           </label>
                           <input
+                            id={`expense-${expense.id}`}
                             type="text"
                             value={expense.nature}
                             onChange={(e) => handleExpenseChange(expense.id, 'nature', e.target.value)}
@@ -849,6 +1048,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                       Nombre de Kilomètres
                     </label>
                     <input
+                      id="kilometers"
                       type="number"
                       value={formData.kilometers}
                       onChange={(e) => handleInputChange('kilometers', e.target.value)}
