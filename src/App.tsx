@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2, FileText, Car, CreditCard, Upload, CheckCircle, AlertCircle, Image, Shield, ExternalLink } from 'lucide-react';
 import { generateExpenseReportPDF } from './utils/pdfGenerator';
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 
 interface ExpenseRow {
   id: string;
@@ -1083,5 +1083,5 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
     </div>
   );
 }
-
+<Analytics />
 export default App;
