@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2, FileText, Car, CreditCard, Upload, CheckCircle, AlertCircle, Image, Shield, ExternalLink } from 'lucide-react';
 import { generateExpenseReportPDF } from './utils/pdfGenerator';
+import { Analytics } from "@vercel/analytics/next";
 
 interface ExpenseRow {
   id: string;
