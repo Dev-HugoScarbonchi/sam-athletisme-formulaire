@@ -49,8 +49,14 @@ interface ErrorPopupProps {
 
 const ErrorPopup: React.FC<ErrorPopupProps> = ({ errors, onClose }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-96 overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           <div className="flex items-center mb-4">
             <AlertCircle className="w-6 h-6 text-red-500 mr-2" />
@@ -61,7 +67,7 @@ const ErrorPopup: React.FC<ErrorPopupProps> = ({ errors, onClose }) => {
             Veuillez corriger les erreurs suivantes avant de soumettre le formulaire :
           </p>
           
-          <div className="space-y-2 mb-6">
+          <div className="space-y-2 mb-6 overflow-y-auto flex-1 max-h-60">
             {errors.map((error, index) => (
               <div key={index} className="flex items-start space-x-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
