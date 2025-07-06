@@ -1080,8 +1080,9 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
           </div>
         </div>
       </div>
+      <Analytics />
     </div>
   );
 }
-<Analytics />
+
 export default App;
