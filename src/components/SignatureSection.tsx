@@ -33,11 +33,14 @@ export const SignatureSection: React.FC<SignatureSectionProps> = ({
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (signatureMode !== 'draw') return;
     
+    e.preventDefault();
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -50,8 +53,8 @@ export const SignatureSection: React.FC<SignatureSectionProps> = ({
       clientY = e.clientY;
     }
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
 
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -60,10 +63,13 @@ export const SignatureSection: React.FC<SignatureSectionProps> = ({
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || signatureMode !== 'draw') return;
 
+    e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -76,8 +82,8 @@ export const SignatureSection: React.FC<SignatureSectionProps> = ({
       clientY = e.clientY;
     }
 
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
 
     ctx.lineTo(x, y);
     ctx.stroke();
