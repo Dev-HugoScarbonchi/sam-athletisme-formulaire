@@ -722,8 +722,8 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
           setEmailSendSuccess(true);
           setSubmitStatus('success');
           console.log('✅ Formulaire envoyé avec succès');
-          console.log('📄 PDF généré:', result.pdf_filename);
-          console.log('💰 Montant total:', result.total_amount, '€');
+          console.log('📄 PDF généré et téléchargé automatiquement');
+          console.log('💰 Montant total:', (totalAmount + kilometricReimbursement).toFixed(2), '€');
         } else {
           throw new Error(responseData.message || 'Erreur lors de l\'envoi du formulaire');
         }
