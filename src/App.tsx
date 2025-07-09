@@ -1409,21 +1409,6 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                 </div>
               )}
 
-              {/* Bouton de téléchargement PDF séparé (visible seulement après succès) */}
-              {submitStatus === 'success' && emailSendSuccess && (
-                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="text-green-800">
-                      <p className="font-medium">Formulaire envoyé avec succès !</p>
-                      <p className="text-sm">Vous pouvez maintenant télécharger votre PDF.</p>
-                    </div>
-                    <button onClick={downloadPDF} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                      Télécharger le PDF
-                    </button>
-                  </div>
-                </div>
-              )}
-              
               <button
                 type="submit"
                 disabled={isSubmitting}
