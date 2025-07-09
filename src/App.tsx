@@ -114,6 +114,7 @@ function App() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [emailSendSuccess, setEmailSendSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Enhanced attachment system
@@ -404,6 +405,19 @@ function App() {
     }
   };
 
+  // Fonction pour vérifier la connectivité réseau
+  const checkNetworkConnectivity = async (): Promise<boolean> => {
+    try {
+      const response = await fetch('https://api.scarbonk.fr/form-handler.php', {
+        method: 'HEAD',
+        mode: 'cors'
+      });
+      return response.ok || response.status === 405; // 405 = Method Not Allowed est OK pour HEAD
+    } catch (error) {
+      return false;
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -417,7 +431,20 @@ function App() {
     }
     
     setIsSubmitting(true);
+    setEmailSendSuccess(false);
     setSubmitStatus('idle');
+    
+    // Vérifier la connectivité réseau avant de continuer
+    const isConnected = await checkNetworkConnectivity();
+    if (!isConnected) {
+      setValidationErrors([
+        { field: 'Connexion réseau', message: 'Problème de connexion réseau détecté. Veuillez vérifier votre connexion internet et réessayer.' },
+        { field: 'Support', message: 'Si le problème persiste, contactez l\'administrateur.' }
+      ]);
+      setShowErrorPopup(true);
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       const formDataToSend = new FormData();
@@ -557,33 +584,135 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
       formDataToSend.append('kilometricReimbursement', kilometricReimbursement.toString());
       
       // Add email configuration
-      // Envoyer vers le serveur PHP
-      const response = await fetch('https://api.scarbonk.fr/form-handler.php', {
-        method: 'POST',
-        body: formDataToSend
-      });
+      // Tentative d'envoi avec retry et timeout
+      let response;
+      let lastError;
+      const maxRetries = 3;
       
-      const result = await response.json();
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondes timeout
+          
+          response = await fetch('https://api.scarbonk.fr/form-handler.php', {
+            method: 'POST',
+            body: formDataToSend,
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            break; // Succès, sortir de la boucle
+          } else {
+            throw new Error(`Erreur serveur: ${response.status} ${response.statusText}`);
+          }
+        } catch (error) {
+          lastError = error;
+          if (attempt === maxRetries) {
+            throw error; // Dernière tentative échouée
+          }
+          // Attendre avant de réessayer (backoff exponentiel)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        }
+      }
       
-      if (result.status === 'success') {
-        setSubmitStatus('success');
-        console.log('✅ Formulaire envoyé avec succès');
-        console.log('📄 PDF généré:', result.pdf_filename);
-        console.log('💰 Montant total:', result.total_amount, '€');
+      if (response && response.ok) {
+        // Vérifier le contenu de la réponse
+        const responseText = await response.text();
+        let responseData;
+        
+        try {
+          responseData = JSON.parse(responseText);
+        } catch (e) {
+          // Si ce n'est pas du JSON, vérifier si c'est un message de succès
+          if (responseText.includes('success') || responseText.includes('envoyé')) {
+            responseData = { success: true, message: responseText };
+          } else {
+            throw new Error('Réponse serveur invalide');
+          }
+        }
+        
+        if (responseData.success !== false) {
+          setEmailSendSuccess(true);
+          setSubmitStatus('success');
+          console.log('✅ Formulaire envoyé avec succès');
+          console.log('📄 PDF généré:', result.pdf_filename);
+          console.log('💰 Montant total:', result.total_amount, '€');
+        } else {
+          throw new Error(responseData.message || 'Erreur lors de l\'envoi du formulaire');
+        }
       } else {
-        console.error('❌ Erreur serveur:', result.message);
-        setSubmitStatus('error');
+        throw new Error(`Erreur serveur: ${response?.status} ${response?.statusText}`);
       }
     } catch (error) {
       console.error('Erreur lors de l\'envoi:', error);
+      setEmailSendSuccess(false);
       setSubmitStatus('error');
-      setValidationErrors([{ 
-        field: 'Envoi du formulaire', 
-        message: error instanceof Error ? error.message : 'Erreur inconnue lors de l\'envoi. Veuillez réessayer.' 
-      }]);
+      
+      // Messages d'erreur plus spécifiques
+      let errorMessages: ValidationError[] = [];
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessages.push({ field: 'Timeout', message: 'La requête a pris trop de temps. Vérifiez votre connexion.' });
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('Load failed')) {
+          errorMessages.push({ field: 'Connexion', message: 'Problème de connexion réseau. Vérifiez votre connexion internet.' });
+        } else if (error.message.includes('NetworkError')) {
+          errorMessages.push({ field: 'Réseau', message: 'Erreur réseau. Le serveur est peut-être temporairement indisponible.' });
+        } else {
+          errorMessages.push({ field: 'Envoi du formulaire', message: error.message });
+        }
+      } else {
+        errorMessages.push({ field: 'Envoi du formulaire', message: 'Erreur inconnue lors de l\'envoi' });
+      }
+      
+      errorMessages.push({ field: 'Solutions possibles', message: '• Vérifiez votre connexion internet' });
+      errorMessages.push({ field: '', message: '• Réessayez dans quelques minutes' });
+      errorMessages.push({ field: '', message: '• Si le problème persiste, contactez l\'administrateur' });
+      errorMessages.push({ field: 'IMPORTANT', message: '⚠️ Le PDF ne sera pas téléchargé tant que l\'envoi n\'a pas réussi' });
+      
+      setValidationErrors(errorMessages);
       setShowErrorPopup(true);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Fonction séparée pour télécharger le PDF (seulement après succès de l'envoi)
+  const downloadPDF = async () => {
+    if (!emailSendSuccess) {
+      setValidationErrors([
+        { field: 'Téléchargement PDF', message: 'Le PDF ne peut être téléchargé que si l\'envoi par email a réussi.' },
+        { field: 'Action requise', message: 'Veuillez d\'abord soumettre le formulaire avec succès.' }
+      ]);
+      setShowErrorPopup(true);
+      return;
+    }
+
+    try {
+      const totalAmount = formData.expenses.reduce((sum, expense) => {
+        return sum + (parseFloat(expense.amount) || 0);
+      }, 0);
+
+      const kilometricReimbursement = parseFloat(formData.kilometers) * 0.321;
+      const pdfBlob = await generateExpenseReportPDF(formData, totalAmount, kilometricReimbursement);
+      
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fiche_remboursement_${new Date().toISOString().split('T')[0]}_${formData.firstName}-${formData.lastName}_${formData.subject.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      setValidationErrors([
+        { field: 'Génération PDF', message: 'Erreur lors de la génération du PDF' },
+        { field: 'Action', message: 'Veuillez réessayer ou contacter l\'administrateur' }
+      ]);
+      setShowErrorPopup(true);
     }
   };
 
@@ -1251,6 +1380,21 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     <span className="font-medium">Échec de la soumission</span>
                   </div>
                   <p className="text-red-600 mt-1">Une erreur s'est produite lors de la soumission de votre formulaire. Veuillez réessayer.</p>
+                </div>
+              )}
+
+              {/* Bouton de téléchargement PDF séparé (visible seulement après succès) */}
+              {submitStatus === 'success' && emailSendSuccess && (
+                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="text-green-800">
+                      <p className="font-medium">Formulaire envoyé avec succès !</p>
+                      <p className="text-sm">Vous pouvez maintenant télécharger votre PDF.</p>
+                    </div>
+                    <button onClick={downloadPDF} className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                      Télécharger le PDF
+                    </button>
+                  </div>
                 </div>
               )}
               
