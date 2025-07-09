@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2, FileText, Car, CreditCard, Upload, CheckCircle, AlertCircle, Image, Shield, ExternalLink } from 'lucide-react';
 import { generateExpenseReportPDF } from './utils/pdfGenerator';
 import { Analytics } from "@vercel/analytics/react";
+import { SignatureSection } from './components/SignatureSection';
 
 interface ExpenseRow {
   id: string;
@@ -489,6 +490,14 @@ function App() {
     }
   };
 
+  const handleSignatureChange = (newSignature: string | null, newSignatureFile: File | null) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      signature: newSignature || '',
+      signatureFile: newSignatureFile
+    }));
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -560,6 +569,11 @@ function App() {
           formDataToSend.append(key, value.toString());
         }
       });
+      
+      // Add signature file if available
+      if (formData.signatureFile) {
+        formDataToSend.append('signatureFile', formData.signatureFile);
+      }
       
       // Add all attachment files with category prefixes
       Object.entries(attachments).forEach(([category, groups]) => {
@@ -1366,141 +1380,11 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                 Signature Numérique *
               </h2>
               
-              <div className="bg-gray-50 rounded-xl p-3 sm:p-6 border-2 border-gray-300">
-                {/* Mode selection */}
-                <div className="flex gap-4 mb-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="signatureMode"
-                      value="upload"
-                      checked={signatureMode === 'upload'}
-                      onChange={(e) => setSignatureMode(e.target.value as 'upload' | 'draw')}
-                      className="text-blue-600"
-                    />
-                    <span className="text-sm text-gray-700">Importer un fichier</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="signatureMode"
-                      value="draw"
-                      checked={signatureMode === 'draw'}
-                      onChange={(e) => setSignatureMode(e.target.value as 'upload' | 'draw')}
-                      className="text-blue-600"
-                    />
-                    <span className="text-sm text-gray-700">Dessiner ma signature</span>
-                  </label>
-                </div>
-
-                {signatureMode === 'upload' ? (
-                  <div>
-                    <p className="text-sm text-gray-700 mb-4">
-                      Veuillez télécharger une image de votre signature
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-4 items-center">
-                      <div className="relative">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleSignatureFileUpload(e.target.files)}
-                          className="hidden"
-                          id="signature-upload"
-                        />
-                        <label
-                          htmlFor="signature-upload"
-                          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 rounded-lg transition-colors cursor-pointer shadow-lg border-2 border-blue-500"
-                        >
-                          <Image className="w-5 h-5" />
-                          Télécharger une Signature
-                        </label>
-                      </div>
-                      
-                      {formData.signatureFile && (
-                        <div className="flex items-center gap-4">
-                          <p className="text-sm text-green-600 flex items-center gap-1">
-                            <CheckCircle className="w-4 h-4" />
-                            Signature téléchargée: {formData.signatureFile.name}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData(prev => ({ ...prev, signature: '', signatureFile: null }));
-                              if (fileInputRef.current) {
-                                fileInputRef.current.value = '';
-                              }
-                            }}
-                            className="px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors border-2 border-red-300"
-                          >
-                            Supprimer
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Image preview for uploaded signature */}
-                    {formData.signature && formData.signatureFile && (
-                      <div className="mt-6">
-                        <p className="text-sm text-gray-700 mb-3">Aperçu de votre signature :</p>
-                        <div className="border-2 border-gray-300 rounded-lg p-4 bg-white max-w-md shadow-sm">
-                          <img
-                            src={formData.signature}
-                            alt="Signature preview"
-                            className="max-h-32 mx-auto"
-                          />
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="mt-4 bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
-                      <p className="text-sm text-blue-800">
-                        <strong>Note :</strong> Téléchargez une image claire de votre signature. 
-                        Formats acceptés : JPG, PNG, GIF, BMP, WEBP (max 5MB).
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dessinez votre signature ci-dessous
-                    </label>
-                    <div className="border border-gray-300 rounded-lg bg-white p-4">
-                      <canvas
-                        ref={canvasRef}
-                        width={400}
-                        height={150}
-                        className="border border-gray-200 rounded cursor-crosshair touch-none"
-                        style={{ width: '100%', maxWidth: '400px', height: '150px' }}
-                        onMouseDown={startDrawing}
-                        onMouseMove={draw}
-                        onMouseUp={stopDrawing}
-                        onMouseLeave={stopDrawing}
-                        onTouchStart={startDrawing}
-                        onTouchMove={draw}
-                        onTouchEnd={stopDrawing}
-                      />
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          type="button"
-                          onClick={clearSignature}
-                          className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-                        >
-                          Effacer
-                        </button>
-                        {drawnSignature && (
-                          <span className="px-3 py-1 text-sm text-green-700 bg-green-50 rounded">
-                            ✓ Signature enregistrée
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {errors.signature && <p className="mt-2 text-sm text-red-700">{errors.signature}</p>}
-              </div>
+              <SignatureSection
+                onSignatureChange={handleSignatureChange}
+                currentSignature={formData.signature}
+                currentSignatureFile={formData.signatureFile}
+              />
             </section>
 
             {/* Submit Button */}

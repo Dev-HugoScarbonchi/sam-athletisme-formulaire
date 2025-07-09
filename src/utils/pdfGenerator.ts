@@ -20,7 +20,7 @@ interface FormData {
   expenses: ExpenseRow[];
   kilometers: string;
   rentalVehicle: boolean;
-  signature: string;
+  signature: string | null;
   signatureFile: File | null;
 }
 
@@ -283,11 +283,29 @@ export const generateExpenseReportPDF = async (
   pdf.text(`${formData.firstName} ${formData.lastName}`, margin + 5, yPosition + signatureBoxHeight + 8);
 
   // Add demandeur signature if available
-  if (formData.signature) {
+  if (formData.signature || formData.signatureFile) {
     try {
-      if (formData.signature.startsWith('data:image/')) {
-        // For drawn signatures or uploaded images
+      if (formData.signature && formData.signature.startsWith('data:image/')) {
+        // For drawn signatures
         pdf.addImage(formData.signature, 'PNG', margin + 5, yPosition + 5, signatureBoxWidth - 10, 25);
+      } else if (formData.signatureFile) {
+        // For uploaded signature files
+        const reader = new FileReader();
+        const signatureDataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              resolve(e.target.result as string);
+            } else {
+              reject(new Error('Failed to read signature file'));
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(formData.signatureFile!);
+        });
+        
+        // Determine image format from file type
+        const imageFormat = formData.signatureFile.type.includes('png') ? 'PNG' : 'JPEG';
+        pdf.addImage(signatureDataUrl, imageFormat, margin + 5, yPosition + 5, signatureBoxWidth - 10, 25);
       }
     } catch (error) {
       console.warn('Could not add demandeur signature to PDF:', error);
