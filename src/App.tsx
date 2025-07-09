@@ -523,6 +523,21 @@ function App() {
       
       formDataToSend.append('fileNamesSummary', JSON.stringify(fileNamesSummary));
       
+      // Add client-side logging data
+      const submissionData = {
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        formData: {
+          firstName,
+          lastName,
+          subject,
+          totalAmount: totalAmount + kilometricReimbursement,
+          expenseCount: expensesData.length,
+          attachmentCount: expenses.reduce((sum, exp) => sum + exp.attachments.length, 0) + supportingDocs.length
+        }
+      };
+      formData.append('clientLog', JSON.stringify(submissionData));
       // Create formatted email content with file names
       const emailContent = `
 DEMANDE DE REMBOURSEMENT DE FRAIS
@@ -602,15 +617,48 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
           
           clearTimeout(timeoutId);
           
-          if (response.ok) {
-            break; // Succès, sortir de la boucle
-          } else {
             throw new Error(`Erreur serveur: ${response.status} ${response.statusText}`);
           }
+          
+          // Log the full response for debugging
+          console.log('Server response:', {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            body: responseText
+          });
         } catch (error) {
+          // Check if response is actually successful
+          if (!response.ok) {
+            throw new Error(`Erreur serveur (${response.status}): ${response.statusText}`);
+          }
           lastError = error;
+          // Verify response content
+          let responseData;
+          try {
+            responseData = JSON.parse(responseText);
+          } catch (e) {
+            // If not JSON, check if it's a success message
+            if (responseText.includes('success') || responseText.includes('envoyé')) {
+              responseData = { success: true, message: responseText };
+            } else {
+              throw new Error(`Réponse serveur invalide: ${responseText.substring(0, 100)}`);
+            }
+          }
           if (attempt === maxRetries) {
+          // Verify that the email was actually sent
+          if (!responseData.success && !responseData.message?.includes('envoyé')) {
+            throw new Error(`Échec de l'envoi: ${responseData.message || 'Réponse serveur inattendue'}`);
+          }
             throw error; // Dernière tentative échouée
+          // Additional verification - check for specific success indicators
+          const successIndicators = ['envoyé', 'success', 'réussi', 'sent'];
+          const hasSuccessIndicator = successIndicators.some(indicator => 
+            responseText.toLowerCase().includes(indicator)
+          );
+          }
+          if (!hasSuccessIndicator) {
+            throw new Error(`Confirmation d'envoi manquante. Réponse: ${responseText.substring(0, 100)}`);
           }
           // Attendre avant de réessayer (backoff exponentiel)
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
@@ -666,6 +714,10 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
       } else {
         errorMessages.push({ field: 'Envoi du formulaire', message: 'Erreur inconnue lors de l\'envoi' });
       }
+      } else if (error.message.includes('Confirmation d\'envoi manquante')) {
+        errorMessage = 'Le serveur n\'a pas confirmé l\'envoi de l\'email';
+      } else if (error.message.includes('Réponse serveur invalide')) {
+        errorMessage = 'Réponse du serveur incorrecte';
       
       errorMessages.push({ field: 'Solutions possibles', message: '• Vérifiez votre connexion internet' });
       errorMessages.push({ field: '', message: '• Réessayez dans quelques minutes' });
@@ -1406,6 +1458,14 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                     ? 'bg-gray-600 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-600 via-blue-700 to-red-600 hover:from-blue-700 hover:via-blue-800 hover:to-red-700 focus:ring-4 focus:ring-blue-500 transform hover:scale-[1.02] border-2 border-blue-500'
                 }`}
+          
+          // Log successful submission
+          console.log('Submission successful:', {
+            attempt,
+            timestamp: new Date().toISOString(),
+            responseData
+          });
+          
               >
                 {isSubmitting ? 'Envoi en cours...' : 'Soumettre la Demande de Remboursement de Frais'}
               </button>
@@ -1436,3 +1496,18 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
 }
 
 export default App;
+      // Enhanced error logging
+      const errorLog = {
+        timestamp: new Date().toISOString(),
+        error: error.message,
+        stack: error.stack,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        formData: {
+          firstName,
+          lastName,
+          subject
+        }
+      };
+      console.error('Detailed error log:', errorLog);
+      
