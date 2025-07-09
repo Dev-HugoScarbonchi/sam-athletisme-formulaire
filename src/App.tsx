@@ -602,19 +602,50 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
           
           clearTimeout(timeoutId);
           
-          if (response.ok) {
-            break; // Succès, sortir de la boucle
-          } else {
-            throw new Error(`Erreur serveur: ${response.status} ${response.statusText}`);
+          // Gestion sécurisée de la réponse
+          let result = null;
+          let responseText = '';
+          
+          try {
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+              result = await response.json();
+            } else {
+              responseText = await response.text();
+              if (responseText.trim()) {
+                try {
+                  result = JSON.parse(responseText);
+                } catch {
+                  // Si ce n'est pas du JSON, on considère que c'est un succès si le statut HTTP est OK
+                  result = { 
+                    success: response.ok, 
+                    message: response.ok ? 'Formulaire envoyé avec succès' : responseText 
+                  };
+                }
+              } else {
+                // Réponse vide mais statut OK = succès
+                result = { 
+                  success: response.ok, 
+                  message: response.ok ? 'Formulaire envoyé avec succès' : 'Réponse vide du serveur' 
+                };
+              }
+            }
+          } catch (parseError) {
+            console.error('Erreur lors du parsing de la réponse:', parseError);
+            result = { 
+              success: response.ok, 
+              message: response.ok ? 'Formulaire envoyé avec succès' : 'Erreur de traitement de la réponse' 
+            };
           }
-        } catch (error) {
-          lastError = error;
-          if (attempt === maxRetries) {
-            throw error; // Dernière tentative échouée
+          
+          // Vérification finale du résultat
+          if (!result) {
+            result = { 
+              success: false, 
+              message: 'Erreur interne: impossible de traiter la réponse du serveur' 
+            };
           }
-          // Attendre avant de réessayer (backoff exponentiel)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-        }
       }
       
       if (response && response.ok) {
@@ -648,11 +679,11 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
     } catch (error) {
       console.error('Erreur lors de l\'envoi:', error);
       setEmailSendSuccess(false);
-      setSubmitStatus('error');
+      const finalErrorMessage = lastError?.message || 'Erreur inconnue lors de l\'envoi du formulaire';
       
       // Messages d'erreur plus spécifiques
       let errorMessages: ValidationError[] = [];
-      
+        message: finalErrorMessage,
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           errorMessages.push({ field: 'Timeout', message: 'La requête a pris trop de temps. Vérifiez votre connexion.' });
@@ -667,7 +698,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
         errorMessages.push({ field: 'Envoi du formulaire', message: 'Erreur inconnue lors de l\'envoi' });
       }
       
-      errorMessages.push({ field: 'Solutions possibles', message: '• Vérifiez votre connexion internet' });
+        message: error?.message || 'Une erreur inattendue s\'est produite',
       errorMessages.push({ field: '', message: '• Réessayez dans quelques minutes' });
       errorMessages.push({ field: '', message: '• Si le problème persiste, contactez l\'administrateur' });
       errorMessages.push({ field: 'IMPORTANT', message: '⚠️ Le PDF ne sera pas téléchargé tant que l\'envoi n\'a pas réussi' });
@@ -1424,7 +1455,7 @@ Document généré automatiquement le ${new Date().toLocaleDateString('fr-FR')} 
                   className="text-blue-600 hover:text-blue-700 font-medium underline decoration-blue-300 hover:decoration-blue-500 transition-colors"
                 >
                   Hugo Scarbonchi
-                </a>
+            const errorMessage = result?.message || `Erreur serveur (${response.status})`;
               </p>
             </div>
           </div>
