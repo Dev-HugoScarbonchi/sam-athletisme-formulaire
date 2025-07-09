@@ -1,56 +1,45 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-
-// Configuration CORS
-$allowed_origins = [
-    'https://sam-athletisme.vercel.app',
-    'https://sam-athletisme-formulaire.vercel.app',
-    'https://localhost:5173',
-    'http://localhost:5173',
-    'https://scarbonk.fr'
-];
-
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowed_origins)) {
-    header("Access-Control-Allow-Origin: $origin");
-}
-
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Access-Control-Max-Age: 86400');
+header('Access-Control-Allow-Headers: Content-Type');
 
-// Gestion des requêtes OPTIONS (preflight)
+// Gérer les requêtes OPTIONS (CORS preflight)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Vérification de la méthode
+// Vérifier que c'est une requête POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Méthode non autorisée']);
     exit();
 }
 
-// Configuration
-require_once 'config.php';
+// Configuration email
+$ADMIN_EMAIL = 'dev@hugoscarbonchi.fr';
+$FROM_EMAIL = 'noreply@scarbonk.fr'; // Changé pour utiliser votre domaine
+$FROM_NAME = 'SAM Athlétisme - Formulaire automatisé';
+
+// Configuration des logs
+$LOG_DIR = __DIR__ . '/logs';
+if (!is_dir($LOG_DIR)) {
+    mkdir($LOG_DIR, 0755, true);
+}
 
 // Fonction de logging améliorée
 function logMessage($message, $level = 'INFO') {
-    $logDir = __DIR__ . '/logs';
-    if (!is_dir($logDir)) {
-        mkdir($logDir, 0755, true);
-    }
-    
+    global $LOG_DIR;
     $timestamp = date('Y-m-d H:i:s');
-    $logFile = $logDir . '/form-handler.log';
+    $logFile = $LOG_DIR . '/form-handler.log';
     $logEntry = "[$timestamp] [$level] $message" . PHP_EOL;
     
     file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
     
     // Log séparé pour les erreurs
     if ($level === 'ERROR') {
-        $errorFile = $logDir . '/errors.log';
+        $errorFile = $LOG_DIR . '/errors.log';
         file_put_contents($errorFile, $logEntry, FILE_APPEND | LOCK_EX);
     }
 }
@@ -65,279 +54,28 @@ function sanitizeInput($data) {
     return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
 }
 
-// Fonction pour générer un boundary unique
-function generateBoundary() {
-    return '----=_NextPart_' . md5(uniqid(time()));
-}
-
-// Fonction pour encoder en base64 par chunks
-function base64EncodeChunked($data) {
-    return chunk_split(base64_encode($data));
-}
-
-// Fonction principale d'envoi d'email avec pièces jointes
-function sendEmailWithAttachments($to, $subject, $message, $attachments = []) {
-    logMessage("Début de l'envoi d'email vers: $to");
-    
-    // Validation de l'email destinataire
-    if (!isValidEmail($to)) {
-        logMessage("Email destinataire invalide: $to", 'ERROR');
-        return false;
-    }
-    
-    // Configuration de l'expéditeur
-    $from = FROM_EMAIL;
-    $fromName = FROM_NAME;
-    
-    if (!isValidEmail($from)) {
-        logMessage("Email expéditeur invalide: $from", 'ERROR');
-        return false;
-    }
-    
-    // Génération du boundary
-    $boundary = generateBoundary();
-    
-    // Headers de base
-    $headers = [
-        "From: $fromName <$from>",
-        "Reply-To: $from",
-        "MIME-Version: 1.0",
-        "Content-Type: multipart/mixed; boundary=\"$boundary\"",
-        "X-Mailer: PHP/" . phpversion(),
-        "X-Priority: 3",
-        "Date: " . date('r')
-    ];
-    
-    // Construction du corps du message
-    $body = "--$boundary\r\n";
-    $body .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $body .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-    $body .= $message . "\r\n\r\n";
-    
-    // Ajout des pièces jointes
-    foreach ($attachments as $attachment) {
-        if (!isset($attachment['name']) || !isset($attachment['content']) || !isset($attachment['type'])) {
-            logMessage("Pièce jointe invalide ignorée", 'WARNING');
-            continue;
-        }
-        
-        $filename = $attachment['name'];
-        $content = $attachment['content'];
-        $mimeType = $attachment['type'];
-        
-        logMessage("Ajout de la pièce jointe: $filename ($mimeType)");
-        
-        $body .= "--$boundary\r\n";
-        $body .= "Content-Type: $mimeType; name=\"$filename\"\r\n";
-        $body .= "Content-Transfer-Encoding: base64\r\n";
-        $body .= "Content-Disposition: attachment; filename=\"$filename\"\r\n\r\n";
-        $body .= base64EncodeChunked($content) . "\r\n";
-    }
-    
-    $body .= "--$boundary--\r\n";
-    
-    // Envoi de l'email
-    $headerString = implode("\r\n", $headers);
-    
-    logMessage("Tentative d'envoi avec " . count($attachments) . " pièce(s) jointe(s)");
-    
-    $result = mail($to, $subject, $body, $headerString);
-    
-    if ($result) {
-        logMessage("Email envoyé avec succès vers: $to");
-        return true;
-    } else {
-        $error = error_get_last();
-        logMessage("Échec de l'envoi d'email vers: $to. Erreur: " . ($error['message'] ?? 'Inconnue'), 'ERROR');
-        return false;
-    }
-}
-
-// Fonction pour traiter les fichiers uploadés
-function processUploadedFiles() {
-    $attachments = [];
-    
-    if (!isset($_FILES) || empty($_FILES)) {
-        logMessage("Aucun fichier uploadé");
-        return $attachments;
-    }
-    
-    foreach ($_FILES as $fieldName => $file) {
-        if (is_array($file['name'])) {
-            // Fichiers multiples
-            for ($i = 0; $i < count($file['name']); $i++) {
-                if ($file['error'][$i] === UPLOAD_ERR_OK) {
-                    $attachments[] = [
-                        'name' => sanitizeInput($file['name'][$i]),
-                        'content' => file_get_contents($file['tmp_name'][$i]),
-                        'type' => $file['type'][$i],
-                        'size' => $file['size'][$i]
-                    ];
-                    logMessage("Fichier traité: " . $file['name'][$i] . " (" . $file['size'][$i] . " bytes)");
-                } else {
-                    logMessage("Erreur upload fichier " . $file['name'][$i] . ": " . $file['error'][$i], 'WARNING');
-                }
-            }
-        } else {
-            // Fichier unique
-            if ($file['error'] === UPLOAD_ERR_OK) {
-                $attachments[] = [
-                    'name' => sanitizeInput($file['name']),
-                    'content' => file_get_contents($file['tmp_name']),
-                    'type' => $file['type'],
-                    'size' => $file['size']
-                ];
-                logMessage("Fichier traité: " . $file['name'] . " (" . $file['size'] . " bytes)");
-            } else {
-                logMessage("Erreur upload fichier " . $file['name'] . ": " . $file['error'], 'WARNING');
-            }
-        }
-    }
-    
-    logMessage("Total fichiers traités: " . count($attachments));
-    return $attachments;
-}
-
-// Fonction pour créer le contenu HTML de l'email
-function createEmailContent($formData) {
-    $html = '<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demande de remboursement - SAM Athlétisme</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .header { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #e9ecef; border-radius: 5px; }
-        .section h3 { margin-top: 0; color: #495057; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .info-item { padding: 5px 0; }
-        .info-label { font-weight: bold; color: #495057; }
-        .expenses-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .expenses-table th, .expenses-table td { border: 1px solid #dee2e6; padding: 8px; text-align: left; }
-        .expenses-table th { background-color: #f8f9fa; font-weight: bold; }
-        .total-row { background-color: #e9ecef; font-weight: bold; }
-        .footer { margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em; color: #6c757d; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>🏃‍♂️ Nouvelle demande de remboursement</h1>
-        <p><strong>SAM Athlétisme Mérignacais</strong></p>
-        <p>Reçue le ' . date('d/m/Y à H:i') . '</p>
-    </div>
-
-    <div class="section">
-        <h3>👤 Informations du demandeur</h3>
-        <div class="info-grid">
-            <div class="info-item"><span class="info-label">Nom :</span> ' . htmlspecialchars($formData['lastName']) . '</div>
-            <div class="info-item"><span class="info-label">Prénom :</span> ' . htmlspecialchars($formData['firstName']) . '</div>
-            <div class="info-item"><span class="info-label">Rôle :</span> ' . htmlspecialchars($formData['role']) . '</div>
-            <div class="info-item"><span class="info-label">Lieu :</span> ' . htmlspecialchars($formData['place']) . '</div>
-            <div class="info-item"><span class="info-label">Date :</span> ' . htmlspecialchars($formData['date']) . '</div>
-            <div class="info-item"><span class="info-label">Mode de paiement :</span> ' . htmlspecialchars($formData['paymentMethod']) . '</div>
-        </div>
-    </div>
-
-    <div class="section">
-        <h3>📋 Détails de la demande</h3>
-        <div class="info-item"><span class="info-label">Objet :</span> ' . htmlspecialchars($formData['subject']) . '</div>
-        <div class="info-item"><span class="info-label">Motivation :</span></div>
-        <p style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px;">' . nl2br(htmlspecialchars($formData['motivation'])) . '</p>
-    </div>';
-
-    // Dépenses
-    if (!empty($formData['expenses'])) {
-        $html .= '<div class="section">
-            <h3>💰 Détail des dépenses</h3>
-            <table class="expenses-table">
-                <thead>
-                    <tr>
-                        <th>Nature de la dépense</th>
-                        <th>Montant (€)</th>
-                        <th>Justificatifs</th>
-                    </tr>
-                </thead>
-                <tbody>';
-        
-        $totalExpenses = 0;
-        foreach ($formData['expenses'] as $expense) {
-            if (!empty($expense['nature']) && !empty($expense['amount'])) {
-                $amount = floatval($expense['amount']);
-                $totalExpenses += $amount;
-                
-                $attachmentsList = '';
-                if (!empty($expense['attachments'])) {
-                    $attachmentsList = implode(', ', array_map('htmlspecialchars', $expense['attachments']));
-                } else {
-                    $attachmentsList = 'Aucun fichier';
-                }
-                
-                $html .= '<tr>
-                    <td>' . htmlspecialchars($expense['nature']) . '</td>
-                    <td>' . number_format($amount, 2, ',', ' ') . ' €</td>
-                    <td>' . $attachmentsList . '</td>
-                </tr>';
-            }
-        }
-        
-        $html .= '<tr class="total-row">
-                <td><strong>TOTAL DÉPENSES</strong></td>
-                <td><strong>' . number_format($totalExpenses, 2, ',', ' ') . ' €</strong></td>
-                <td></td>
-            </tr>';
-        
-        $html .= '</tbody></table></div>';
-    }
-
-    // Remboursement kilométrique
-    if (!empty($formData['kilometers']) && floatval($formData['kilometers']) > 0) {
-        $kilometers = floatval($formData['kilometers']);
-        $kilometricAmount = $kilometers * 0.321;
-        
-        $html .= '<div class="section">
-            <h3>🚗 Remboursement kilométrique</h3>
-            <div class="info-grid">
-                <div class="info-item"><span class="info-label">Kilomètres :</span> ' . $kilometers . ' km</div>
-                <div class="info-item"><span class="info-label">Taux :</span> 0,321 €/km</div>
-                <div class="info-item"><span class="info-label">Véhicule de location :</span> ' . ($formData['rentalVehicle'] ? 'Oui' : 'Non') . '</div>
-                <div class="info-item"><span class="info-label">Montant :</span> <strong>' . number_format($kilometricAmount, 2, ',', ' ') . ' €</strong></div>
-            </div>
-        </div>';
-        
-        $totalExpenses += $kilometricAmount;
-    }
-
-    // Total général
-    $html .= '<div class="section" style="background: #e9ecef;">
-        <h3>💵 MONTANT TOTAL DE LA DEMANDE</h3>
-        <p style="font-size: 1.5em; font-weight: bold; color: #007bff; margin: 0;">' . number_format($totalExpenses, 2, ',', ' ') . ' €</p>
-    </div>';
-
-    $html .= '<div class="footer">
-        <p><strong>📎 Pièces jointes :</strong> Fiche de remboursement PDF + justificatifs uploadés</p>
-        <p><strong>⚠️ Important :</strong> Cette demande nécessite validation et signature du président.</p>
-        <p><em>Email généré automatiquement par le système de gestion SAM Athlétisme</em></p>
-    </div>
-
-</body>
-</html>';
-
-    return $html;
-}
-
 try {
     logMessage("=== DÉBUT DU TRAITEMENT D'UNE NOUVELLE DEMANDE ===");
     logMessage("IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Inconnue'));
     logMessage("User-Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? 'Inconnu'));
     
-    // Récupération des données du formulaire
-    $formData = [];
-    foreach ($_POST as $key => $value) {
-        $formData[$key] = sanitizeInput($value);
-    }
-    
+    // Récupérer les données du formulaire avec sanitisation
+    $formData = [
+        'place' => sanitizeInput($_POST['place'] ?? ''),
+        'date' => sanitizeInput($_POST['date'] ?? ''),
+        'firstName' => sanitizeInput($_POST['firstName'] ?? ''),
+        'lastName' => sanitizeInput($_POST['lastName'] ?? ''),
+        'role' => sanitizeInput($_POST['role'] ?? ''),
+        'subject' => sanitizeInput($_POST['subject'] ?? ''),
+        'motivation' => sanitizeInput($_POST['motivation'] ?? ''),
+        'paymentMethod' => sanitizeInput($_POST['paymentMethod'] ?? ''),
+        'requestDate' => sanitizeInput($_POST['requestDate'] ?? ''),
+        'kilometers' => sanitizeInput($_POST['kilometers'] ?? '0'),
+        'rentalVehicle' => sanitizeInput($_POST['rentalVehicle'] ?? 'false'),
+        'totalAmount' => sanitizeInput($_POST['totalAmount'] ?? '0'),
+        'kilometricReimbursement' => sanitizeInput($_POST['kilometricReimbursement'] ?? '0')
+    ];
+
     // Validation des champs obligatoires
     $requiredFields = ['firstName', 'lastName', 'role', 'place', 'date', 'subject', 'motivation', 'paymentMethod'];
     $missingFields = [];
@@ -354,73 +92,315 @@ try {
         echo json_encode(['error' => 'Champs obligatoires manquants: ' . implode(', ', $missingFields)]);
         exit();
     }
-    
-    // Traitement des dépenses (format JSON)
-    $expenses = [];
-    if (!empty($formData['expenses'])) {
-        $expensesData = json_decode($formData['expenses'], true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($expensesData)) {
-            $expenses = $expensesData;
-        }
-    }
-    $formData['expenses'] = $expenses;
-    
+
     logMessage("Demande de: " . $formData['firstName'] . " " . $formData['lastName']);
     logMessage("Objet: " . $formData['subject']);
+
+    // Décoder les dépenses
+    $expenses = json_decode($_POST['expenses'] ?? '[]', true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        logMessage("Erreur de décodage JSON des dépenses: " . json_last_error_msg(), 'ERROR');
+        $expenses = [];
+    }
+    
     logMessage("Nombre de dépenses: " . count($expenses));
+
+    // Calculer le total général
+    $grandTotal = floatval($formData['totalAmount']) + floatval($formData['kilometricReimbursement']);
+    logMessage("Montant total: " . $grandTotal . " €");
+
+    // Formater le nom du fichier PDF
+    $formatDate = str_replace('-', '', $formData['requestDate']);
+    $formatName = strtolower(str_replace(' ', '-', $formData['firstName'] . '-' . $formData['lastName']));
+    $formatMotif = strtolower(preg_replace('/[^a-z0-9]/', '-', $formData['subject']));
+    $formatMotif = preg_replace('/-+/', '-', trim($formatMotif, '-'));
+    $pdfFileName = "fiche_remboursement_{$formatDate}_{$formatName}_{$formatMotif}.pdf";
+
+    // Créer le sujet de l'email
+    $emailSubject = "FORMULAIRE DE REMBOURSEMENT DE FRAIS - {$formData['lastName']} {$formData['firstName']} - " . 
+                   date('d/m/Y', strtotime($formData['requestDate'])) . " - Motif : {$formData['subject']}";
+
+    // Créer le contenu HTML de l'email
+    $emailContent = createEmailContent($formData, $expenses, $grandTotal);
+
+    // Préparer les pièces jointes
+    $attachments = [];
+    $attachmentCount = 0;
     
-    // Traitement des fichiers uploadés
-    $attachments = processUploadedFiles();
-    
-    // Création du contenu de l'email
-    $emailContent = createEmailContent($formData);
-    
-    // Sujet de l'email
-    $emailSubject = "🏃‍♂️ Demande de remboursement - " . $formData['firstName'] . " " . $formData['lastName'] . " - " . $formData['subject'];
-    
-    // Envoi de l'email
-    $emailSent = sendEmailWithAttachments(ADMIN_EMAIL, $emailSubject, $emailContent, $attachments);
-    
+    // Ajouter le PDF de synthèse
+    if (isset($_FILES['summary_pdf']) && $_FILES['summary_pdf']['error'] === UPLOAD_ERR_OK) {
+        $attachments[] = [
+            'name' => $pdfFileName,
+            'content' => file_get_contents($_FILES['summary_pdf']['tmp_name']),
+            'type' => 'application/pdf'
+        ];
+        $attachmentCount++;
+        logMessage("PDF de synthèse ajouté: " . $pdfFileName);
+    }
+
+    // Ajouter les justificatifs des dépenses
+    foreach ($expenses as $expenseIndex => $expense) {
+        for ($fileIndex = 0; $fileIndex < 10; $fileIndex++) {
+            $fileKey = "expense_{$expenseIndex}_{$fileIndex}";
+            if (isset($_FILES[$fileKey]) && $_FILES[$fileKey]['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES[$fileKey];
+                $attachments[] = [
+                    'name' => "justificatif_depense_" . ($expenseIndex + 1) . "_" . $file['name'],
+                    'content' => file_get_contents($file['tmp_name']),
+                    'type' => $file['type']
+                ];
+                $attachmentCount++;
+                logMessage("Justificatif dépense ajouté: " . $file['name']);
+            }
+        }
+    }
+
+    // Ajouter les autres pièces jointes
+    $categories = ['transport', 'banking', 'other'];
+    foreach ($categories as $category) {
+        for ($groupIndex = 0; $groupIndex < 5; $groupIndex++) {
+            for ($fileIndex = 0; $fileIndex < 10; $fileIndex++) {
+                $fileKey = "{$category}_{$groupIndex}_{$fileIndex}";
+                if (isset($_FILES[$fileKey]) && $_FILES[$fileKey]['error'] === UPLOAD_ERR_OK) {
+                    $file = $_FILES[$fileKey];
+                    $attachments[] = [
+                        'name' => "{$category}_" . $file['name'],
+                        'content' => file_get_contents($file['tmp_name']),
+                        'type' => $file['type']
+                    ];
+                    $attachmentCount++;
+                    logMessage("Pièce jointe {$category} ajoutée: " . $file['name']);
+                }
+            }
+        }
+    }
+
+    // Ajouter la signature si elle existe
+    if (isset($_FILES['signatureFile']) && $_FILES['signatureFile']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['signatureFile'];
+        $attachments[] = [
+            'name' => "signature_" . $file['name'],
+            'content' => file_get_contents($file['tmp_name']),
+            'type' => $file['type']
+        ];
+        $attachmentCount++;
+        logMessage("Signature ajoutée: " . $file['name']);
+    }
+
+    logMessage("Total pièces jointes: " . $attachmentCount);
+
+    // Envoyer l'email
+    logMessage("Tentative d'envoi d'email vers: " . $ADMIN_EMAIL);
+    $emailSent = sendEmailWithAttachments(
+        $ADMIN_EMAIL,
+        $emailSubject,
+        $emailContent,
+        $FROM_EMAIL,
+        $FROM_NAME,
+        $attachments
+    );
+
     if ($emailSent) {
-        logMessage("=== DEMANDE TRAITÉE AVEC SUCCÈS ===");
+        logMessage("=== EMAIL ENVOYÉ AVEC SUCCÈS ===");
         
         // Log de la soumission réussie
         $submissionLog = [
             'timestamp' => date('Y-m-d H:i:s'),
             'name' => $formData['firstName'] . ' ' . $formData['lastName'],
             'subject' => $formData['subject'],
-            'attachments_count' => count($attachments),
+            'total_amount' => $grandTotal,
+            'attachments_count' => $attachmentCount,
             'ip' => $_SERVER['REMOTE_ADDR'] ?? 'Inconnue'
         ];
         
-        $submissionLogFile = __DIR__ . '/logs/submissions.log';
+        $submissionLogFile = $LOG_DIR . '/submissions.log';
         file_put_contents($submissionLogFile, json_encode($submissionLog) . PHP_EOL, FILE_APPEND | LOCK_EX);
         
-        http_response_code(200);
         echo json_encode([
-            'success' => true,
-            'message' => 'Demande envoyée avec succès',
-            'attachments_processed' => count($attachments)
+            'status' => 'success',
+            'message' => 'Formulaire envoyé avec succès',
+            'pdf_filename' => $pdfFileName,
+            'total_amount' => $grandTotal,
+            'attachments_processed' => $attachmentCount
         ]);
     } else {
-        logMessage("=== ÉCHEC DE L'ENVOI D'EMAIL ===", 'ERROR');
-        http_response_code(500);
-        echo json_encode([
-            'error' => 'Erreur lors de l\'envoi de l\'email',
-            'details' => 'Consultez les logs pour plus d\'informations'
-        ]);
+        throw new Exception('Échec de l\'envoi de l\'email - Vérifiez les logs pour plus de détails');
     }
-    
+
 } catch (Exception $e) {
-    logMessage("Exception: " . $e->getMessage(), 'ERROR');
+    logMessage("EXCEPTION: " . $e->getMessage(), 'ERROR');
     logMessage("Stack trace: " . $e->getTraceAsString(), 'ERROR');
     
     http_response_code(500);
     echo json_encode([
-        'error' => 'Erreur interne du serveur',
-        'message' => $e->getMessage()
+        'status' => 'error',
+        'message' => 'Erreur lors de l\'envoi du formulaire: ' . $e->getMessage()
     ]);
 }
 
 logMessage("=== FIN DU TRAITEMENT ===");
+
+/**
+ * Créer le contenu HTML de l'email
+ */
+function createEmailContent($formData, $expenses, $grandTotal) {
+    $expensesList = '';
+    foreach ($expenses as $expense) {
+        if (!empty($expense['nature']) && !empty($expense['amount'])) {
+            $expensesList .= "<li>" . htmlspecialchars($expense['nature']) . ": " . htmlspecialchars($expense['amount']) . " €</li>";
+        }
+    }
+
+    $kilometricInfo = '';
+    if (floatval($formData['kilometers']) > 0) {
+        $kilometricInfo = "
+        <p><strong>Remboursement kilométrique :</strong></p>
+        <ul>
+            <li>Kilomètres parcourus : {$formData['kilometers']} km</li>
+            <li>Montant : {$formData['kilometricReimbursement']} €</li>
+            <li>Véhicule de location : " . ($formData['rentalVehicle'] === 'true' ? 'Oui' : 'Non') . "</li>
+        </ul>";
+    }
+
+    return "
+    <html>
+    <head>
+        <meta charset='UTF-8'>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; }
+            .header { background: linear-gradient(135deg, #2563eb, #dc2626); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+            .content { background: #f8fafc; padding: 20px; border-radius: 8px; }
+            .total { background: #1e40af; color: white; padding: 15px; border-radius: 8px; text-align: center; font-size: 18px; font-weight: bold; margin: 20px 0; }
+            ul { margin: 10px 0; padding-left: 20px; }
+            .info-section { margin: 15px 0; }
+            .footer { margin-top: 30px; padding: 15px; background: #e9ecef; border-radius: 5px; font-size: 0.9em; color: #6c757d; }
+        </style>
+    </head>
+    <body>
+        <div class='header'>
+            <h2>🏃‍♂️ SAM Athlétisme Mérignacais</h2>
+            <p>Nouvelle demande de remboursement de frais</p>
+            <p>Reçue le " . date('d/m/Y à H:i') . "</p>
+        </div>
+        
+        <div class='content'>
+            <p>Bonjour,</p>
+            
+            <p>Une nouvelle demande de remboursement de frais a été soumise par <strong>{$formData['firstName']} {$formData['lastName']}</strong>.</p>
+            
+            <div class='info-section'>
+                <p><strong>Informations de la demande :</strong></p>
+                <ul>
+                    <li><strong>Date de la demande :</strong> " . date('d/m/Y', strtotime($formData['requestDate'])) . "</li>
+                    <li><strong>Motif :</strong> {$formData['subject']}</li>
+                    <li><strong>Rôle/Fonction :</strong> {$formData['role']}</li>
+                    <li><strong>Lieu :</strong> {$formData['place']}</li>
+                    <li><strong>Date de l'événement :</strong> " . date('d/m/Y', strtotime($formData['date'])) . "</li>
+                    <li><strong>Mode de paiement souhaité :</strong> {$formData['paymentMethod']}</li>
+                </ul>
+            </div>
+            
+            <div class='info-section'>
+                <p><strong>Motivation :</strong></p>
+                <p style='background: white; padding: 10px; border-left: 4px solid #2563eb; margin: 10px 0;'>
+                    " . nl2br(htmlspecialchars($formData['motivation'])) . "
+                </p>
+            </div>
+            
+            <div class='info-section'>
+                <p><strong>Détail des dépenses :</strong></p>
+                <ul>{$expensesList}</ul>
+                <p><strong>Total des dépenses :</strong> {$formData['totalAmount']} €</p>
+            </div>
+            
+            {$kilometricInfo}
+            
+            <div class='total'>
+                💰 MONTANT TOTAL DE LA DEMANDE : " . number_format($grandTotal, 2, ',', ' ') . " €
+            </div>
+            
+            <div class='footer'>
+                <p><strong>📎 Pièces jointes :</strong> Fiche de remboursement PDF + justificatifs uploadés</p>
+                <p><strong>⚠️ Important :</strong> Cette demande nécessite validation et signature du président.</p>
+                <p><em>Email généré automatiquement par le système de gestion SAM Athlétisme</em></p>
+            </div>
+        </div>
+    </body>
+    </html>";
+}
+
+/**
+ * Envoyer un email avec pièces jointes - Version améliorée
+ */
+function sendEmailWithAttachments($to, $subject, $htmlContent, $fromEmail, $fromName, $attachments = []) {
+    logMessage("Début de l'envoi d'email vers: $to");
+    
+    // Validation des emails
+    if (!isValidEmail($to)) {
+        logMessage("Email destinataire invalide: $to", 'ERROR');
+        return false;
+    }
+    
+    if (!isValidEmail($fromEmail)) {
+        logMessage("Email expéditeur invalide: $fromEmail", 'ERROR');
+        return false;
+    }
+    
+    $boundary = md5(uniqid(time()));
+    
+    // Headers améliorés
+    $headers = [
+        "From: {$fromName} <{$fromEmail}>",
+        "Reply-To: {$fromEmail}",
+        "MIME-Version: 1.0",
+        "Content-Type: multipart/mixed; boundary=\"{$boundary}\"",
+        "X-Mailer: PHP/" . phpversion(),
+        "X-Priority: 3",
+        "Date: " . date('r')
+    ];
+    
+    // Corps du message
+    $message = "--{$boundary}\r\n";
+    $message .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+    $message .= $htmlContent . "\r\n\r\n";
+    
+    // Ajouter les pièces jointes
+    foreach ($attachments as $attachment) {
+        if (!isset($attachment['name']) || !isset($attachment['content']) || !isset($attachment['type'])) {
+            logMessage("Pièce jointe invalide ignorée", 'WARNING');
+            continue;
+        }
+        
+        $filename = $attachment['name'];
+        $content = $attachment['content'];
+        $mimeType = $attachment['type'];
+        
+        logMessage("Ajout de la pièce jointe: $filename ($mimeType)");
+        
+        $message .= "--{$boundary}\r\n";
+        $message .= "Content-Type: {$mimeType}; name=\"{$filename}\"\r\n";
+        $message .= "Content-Transfer-Encoding: base64\r\n";
+        $message .= "Content-Disposition: attachment; filename=\"{$filename}\"\r\n\r\n";
+        $message .= chunk_split(base64_encode($content)) . "\r\n";
+    }
+    
+    $message .= "--{$boundary}--\r\n";
+    
+    // Envoyer l'email
+    $headerString = implode("\r\n", $headers);
+    
+    logMessage("Tentative d'envoi avec " . count($attachments) . " pièce(s) jointe(s)");
+    
+    $result = mail($to, $subject, $message, $headerString);
+    
+    if ($result) {
+        logMessage("Email envoyé avec succès vers: $to");
+        return true;
+    } else {
+        $error = error_get_last();
+        logMessage("Échec de l'envoi d'email vers: $to. Erreur: " . ($error['message'] ?? 'Inconnue'), 'ERROR');
+        return false;
+    }
+}
 ?>
