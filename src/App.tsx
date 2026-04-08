@@ -543,7 +543,7 @@ function App() {
                   onRemove={(id) => removeCategoryExpense('transportExpenses', id)}
                   onChange={(id, field, value) => handleCategoryExpenseChange('transportExpenses', id, field, value)}
                   onAttachment={(id, files) => handleCategoryAttachment('transportExpenses', id, files)}
-                  total={transportTotal}
+                  total={transportTotal + kilometricReimbursement}
                   accentColor="blue"
                 >
                   <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100 mb-2">
